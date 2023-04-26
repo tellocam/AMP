@@ -1,0 +1,23 @@
+Bubblesort
+-------------------------------
+
+This example benchmarks bubblesort.
+
+  make small-bench
+
+Runs a small benchmark that takes approximately 1 minute to finish. The
+results are stored time-stamped in data/.
+
+  make small-plot
+
+Produces two plots of the small benchmark data. It automatically chooses
+the latest timestamped run in data/.
+
+Prerequisites
+-----------------------------
+
+What is needed:
+
+* C compiler
+* GNU Make
+* Python version at least 3.6
