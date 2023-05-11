@@ -42,7 +42,7 @@ bench:
 
 small-bench: $(BUILD_DIR) $(NAME).so $(DATA_DIR)
 	@echo "Running small-bench ..."
-	@python benchmark.py
+	@python3 benchmark.py
 
 small-plot: 
 	@echo "Plotting small-bench results ..."

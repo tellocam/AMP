@@ -77,6 +77,7 @@ struct counters random_bench1(struct one_thread_library* l, int times, int seed)
                tid, herlihy_shavit_luchangco_spear, kernigham_ritchie);
         */
         // We can only have exclusive access to the library
+        // here the lock is acquired
         #pragma omp critical
         {
             if (choice > ((1<<30))) {
@@ -102,7 +103,7 @@ struct counters random_bench1(struct one_thread_library* l, int times, int seed)
                     data.failed_turns++;
                 }
             }
-        }
+        } // here the lock is released
     }
     return data;
 }
