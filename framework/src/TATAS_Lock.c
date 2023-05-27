@@ -23,49 +23,48 @@ void sleepForOneCycle() {
     __asm__ volatile("nop");
 }
 
-// Test-and-Set Lock struct
+// Test-and-Test-and-Set Lock struct
 typedef struct {
     int flag;
-} TAS_lock_t;
+} TATAS_lock_t;
 
 // Initiate a "False" flagged Lock, this means, the lock is NOT acquired by any thread!
-void TAS_lock_init(TAS_lock_t* lock) {
+void TATAS_lock_init(TATAS_lock_t* lock) {
     lock->flag = 0;
 }
 
-void TAS_lock_acquire(TAS_lock_t* lock) {
-    while (atomic_flag_test_and_set(&lock->flag)) {
-        // Stay in WHILE part until the busy thread sets lock->flag = 0
-    }
+void TATAS_lock_acquire(TATAS_lock_t* lock) {
+    do {
+        while (lock->flag == 1);
+    } while (atomic_flag_test_and_set(&lock->flag));
 }
 
-void TAS_lock_release(TAS_lock_t* lock) {
+void TATAS_lock_release(TATAS_lock_t* lock) {
     atomic_flag_clear(&lock->flag);
 }
 
-TAS_lock_t lock; // Declare a test-and-set lock
+TATAS_lock_t lock; // Declare a test-and-set lock
 
 void critical_section() {
     // Acquire lock
-    TAS_lock_acquire(&lock);
+    TATAS_lock_acquire(&lock);
 
     // Critical section
     // sleepForOneCycle();
     printf("Thread %d is in the critical section.\n", omp_get_thread_num());
 
     // Release lock
-    TAS_lock_release(&lock);
+    TATAS_lock_release(&lock);
 }
 
 int main() {
-    TAS_lock_init(&lock); // Initialize the test-and-set lock
+    TATAS_lock_init(&lock); // Initialize the test-and-set lock
 
     // Set the number of threads
     omp_set_num_threads(4);
 
     // Parallel region
     #pragma omp parallel
-    #pragma omp barrier
     {
         critical_section();
     }
