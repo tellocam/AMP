@@ -6,6 +6,8 @@
 #include <omp.h>
 #include <stdatomic.h>
 
+#include <unistd.h> // für sleep()
+
 /* These structs should match the definition in the python files.. this is to be done yet in a less cumbersome way
  */
 
@@ -23,43 +25,59 @@ void sleepForOneCycle() {
     __asm__ volatile("nop");
 }
 
-// Test-and-Set Lock struct
+// Test-and-Test-and-Set Lock struct
 typedef struct {
-    int flag;
-} TAS_lock_t;
+    int ticket;
+    int served;
+} TATAS_lock_t;
 
 // Initiate a "False" flagged Lock, this means, the lock is NOT acquired by any thread!
-void TAS_lock_init(TAS_lock_t* lock) {
-    lock->flag = 0;
+void lock_init(TATAS_lock_t* lock) {
+    lock->ticket = 0;
 }
 
-void TAS_lock_acquire(TAS_lock_t* lock) {
-    while (atomic_flag_test_and_set(&lock->flag)) {
-        // Stay in WHILE part until the busy thread sets lock->flag = 0
-    }
+void lock_acquire(TATAS_lock_t* lock, int *served) {
+    int next = atomic_fetch_add_explicit(&lock->ticket,1, 0);
+    while (*served < next) {};
 }
 
-void TAS_lock_release(TAS_lock_t* lock) {
-    atomic_flag_clear(&lock->flag);
+void lock_release(int* served) {
+    #pragma omp atomic
+    (*served)++;
 }
 
-TAS_lock_t lock; // Declare a test-and-set lock
+TATAS_lock_t lock; // Declare a test-and-set lock
 
-void critical_section() {
-    // Acquire lock
-    TAS_lock_acquire(&lock);
+// void critical_section() {
+//     // Acquire lock
+//     int served = 0;
+//     lock_acquire(&lock, &served);
 
-    // Critical section
-    // sleepForOneCycle();
-    printf("Thread %d is in the critical section.\n", omp_get_thread_num());
-    int tid = omp_get_thread_num();
+//     // Critical section
+//     // sleepForOneCycle();
+//     printf("Thread %d is in the critical section.\n", omp_get_thread_num());
 
-    // Release lock
-    TAS_lock_release(&lock);
-}
+//     // Release lock
+//     lock_release(&served);
+// }
+
+// int main() {
+//     TATAS_lock_init(&lock); // Initialize the test-and-set lock
+
+//     // Set the number of threads
+//     omp_set_num_threads(20);
+
+//     // Parallel region
+//     #pragma omp parallel
+//     {
+//         critical_section();
+//     }
+
+//     return 0;
+// }
 
 int main() {
-    TAS_lock_init(&lock); // Initialize the test-and-set lock
+    lock_init(&lock); // Initialize the test-and-set lock
 
     // Number of threads launched -> will be read from cmd line later
     int n = 8;
@@ -72,6 +90,7 @@ int main() {
     }
  
     int count_total = 0;
+    int served = 0;
 
     // Set the number of threads
     omp_set_num_threads(n);
@@ -79,23 +98,23 @@ int main() {
     // Parallel region
     #pragma omp parallel
     {
-
-        while (count_total < 1000-n) 
+        int* shared_served = &served;
+        while (count_total < 20-n) 
         {
             // critical_section(count_success, count_total);
 
             // Acquire lock
-            TAS_lock_acquire(&lock);
+            lock_acquire(&lock, shared_served);
 
             // Critical section
             // sleepForOneCycle();
-            // printf("Thread %d is in the critical section.\n", omp_get_thread_num());
             int tid = omp_get_thread_num();
             count_success[tid] += 1;
+            // printf("Thread %d is has acquired %d times with ticket %d.\n", tid, count_success[tid], served);
             count_total += 1;
 
             // Release lock
-            TAS_lock_release(&lock);
+            lock_release(shared_served);
         }
     }
 
