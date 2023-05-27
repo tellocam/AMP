@@ -61,7 +61,7 @@ int main() {
     TATAS_lock_init(&lock); // Initialize the test-and-set lock
 
     // Set the number of threads
-    omp_set_num_threads(4);
+    omp_set_num_threads(20);
 
     // Parallel region
     #pragma omp parallel
