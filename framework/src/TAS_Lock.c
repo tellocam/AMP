@@ -8,11 +8,14 @@
 
 /* These structs should match the definition in the python files.. this is to be done yet in a less cumbersome way
  */
-
+/*
+non-atomic correctness struct
+*/
 struct counters {
     int failed_lockAcq;
     int successful_lockAcq;
 };
+
 
 struct bench_result {
     float time;
@@ -36,6 +39,8 @@ void TAS_lock_init(TAS_lock_t* lock) {
 void TAS_lock_acquire(TAS_lock_t* lock) {
     while (atomic_flag_test_and_set(&lock->flag)) {
         // Stay in WHILE part until the busy thread sets lock->flag = 0
+        // Here we might introduce the non-atomic faileq_lockAcq +=
+
     }
 }
 
@@ -50,7 +55,6 @@ void critical_section() {
     TAS_lock_acquire(&lock);
 
     // Critical section
-    // sleepForOneCycle();
     printf("Thread %d is in the critical section.\n", omp_get_thread_num());
     int tid = omp_get_thread_num();
 
