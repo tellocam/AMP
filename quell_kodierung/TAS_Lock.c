@@ -22,9 +22,6 @@ struct bench_result {
     struct counters reduced_counters;
 };
 
-void sleepForOneCycle() {
-    __asm__ volatile("nop");
-}
 
 // Test-and-Set Lock struct
 typedef struct {

@@ -4,8 +4,9 @@
 #include <strings.h>
 #include <stdbool.h>
 #include <omp.h>
+#include <stdatomic.h>
 
-/* These structs should to match the definition in benchmark.py
+/* These structs should match the definition in benchmark.py
  */
 struct counters {
     int failed_turns;
@@ -16,112 +17,81 @@ struct bench_result {
     struct counters reduced_counters;
 };
 
-/* This is our example shared structure, a library for threads. Books can be
- * lent and returned via the four respective functions.
- */
-struct one_thread_library {
-    int art_of_multiprocessor_programming;
-    int the_c_programming_language;
-} library;
+// Test-and-Set Lock struct
+typedef struct {
+    int flag;
+} TAS_lock_t;
 
+// Initiate a "False" flagged Lock, this means, the lock is NOT acquired by any thread!
+void TAS_lock_init(TAS_lock_t* lock) {
+    lock->flag = 0;
+}
 
-bool lend_herlihyshavit_luchangco_spear(struct one_thread_library* l) {
-    if (l->art_of_multiprocessor_programming > 0) {
-        l->art_of_multiprocessor_programming--;
-        return true;
+void TAS_lock_acquire(TAS_lock_t* lock, int* fail_counter, int* succ_counter) {
+    while (atomic_flag_test_and_set(&lock->flag)) {
+        // Stay in WHILE part until the busy thread sets lock->flag = 0
+        // Here we might introduce the non-atomic faileq_lockAcq +=
+        fail_counter++;
     }
-    return false;
+    
+    succ_counter++;
+    
+
 }
 
-void return_herlihyshavit_luchangco_spear(struct one_thread_library* l) {
-    l->art_of_multiprocessor_programming++;
+void TAS_lock_release(TAS_lock_t* lock) {
+    atomic_flag_clear(&lock->flag);
 }
 
-bool lend_kernigham_ritchie(struct one_thread_library* l) {
-    if (l->the_c_programming_language > 0) {
-        l->the_c_programming_language--;
-        return true;
-    }
-    return false;
+TAS_lock_t lock; // Declare a test-and-set lock
+
+void critical_section(int* fail_counter, int* succ_counter) {
+
+    // Acquire lock
+    TAS_lock_acquire(&lock, &fail_counter, &succ_counter);
+
+    // Critical section
+    printf("Thread %d is in the critical section.\n", omp_get_thread_num());
+    int tid = omp_get_thread_num();
+
+    // Release lock
+    TAS_lock_release(&lock);
 }
 
-void return_kernigham_ritchie(struct one_thread_library* l) {
-    l->the_c_programming_language++;
-}
 
-struct counters random_bench1(struct one_thread_library* l, int times, int seed) {
+struct counters random_bench1(int times) {
+
     int tid = omp_get_thread_num();
     printf("Thread %d started.\n", tid);
     // Barrier to force OMP to start all threads at the same time
     #pragma omp barrier
 
-    struct random_data rand_state;
-    int choice;
-    char statebuf[32];
-    bzero(&rand_state, sizeof(struct random_data));
-    bzero(&statebuf,   sizeof(statebuf));
-    initstate_r(seed, statebuf, 32, &rand_state);
-
     struct counters data = {.failed_turns = 0,
                             .successful_lends = 0};
 
-    int herlihy_shavit_luchangco_spear = 0;
-    int kernigham_ritchie = 0;
+    // struct counters* data_ptr = &data;
 
-    for (int i=0; i<times;) {
-        // What are we reading today?
-        random_r(&rand_state, &choice);
 
-        /*
-        printf("Thread %d: has %d AMP books and %d C books.\n",\
-               tid, herlihy_shavit_luchangco_spear, kernigham_ritchie);
-        */
-        // We can only have exclusive access to the library
-        // here the lock is acquired
-        #pragma omp critical
-        {
-            if (choice > ((1<<30))) {
-                if (lend_herlihyshavit_luchangco_spear(l)) {
-                    herlihy_shavit_luchangco_spear++;
-                    data.successful_lends++;
-                } else if (herlihy_shavit_luchangco_spear > 0) {
-                    return_herlihyshavit_luchangco_spear(l);
-                    herlihy_shavit_luchangco_spear--;
-                    i++;
-                } else {
-                    data.failed_turns++;
-                }
-            } else {
-                if (lend_kernigham_ritchie(l)) {
-                    kernigham_ritchie++;
-                    data.successful_lends++;
-                } else if (kernigham_ritchie > 0) {
-                    return_kernigham_ritchie(l);
-                    kernigham_ritchie--;
-                    i++;
-                } else {
-                    data.failed_turns++;
-                }
-            }
-        } // here the lock is released
+    for (int i=0; i<times;i++) {
+
+        critical_section(&data->failed_turns, &data->successful_lends);
     }
+
     return data;
 }
 
-struct bench_result small_bench(int t, int len) {
+struct bench_result small_bench(int t, int len) { // t is number of threads, len is how many iterations!
     struct bench_result result;
     struct counters thread_data[t];
     double tic, toc;
 
-    library.art_of_multiprocessor_programming = 20;
-    library.the_c_programming_language = 20;
 
     omp_set_num_threads(t);
     tic = omp_get_wtime();
     {
         #pragma omp parallel for
         for (int i=0; i<t; i++) {
-            thread_data[i] = random_bench1(&library, len, i);
+            thread_data[i] = random_bench1(len);
         }
     }
     toc = omp_get_wtime();
