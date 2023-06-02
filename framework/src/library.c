@@ -48,7 +48,7 @@ TAS_lock_t lock; // Declare a test-and-set lock
 void critical_section(int* fail_counter, int* succ_counter) {
 
     // Acquire lock
-    TAS_lock_acquire(&lock, &fail_counter, &succ_counter);
+    TAS_lock_acquire(&lock, fail_counter, succ_counter);
 
     // Critical section
     printf("Thread %d is in the critical section.\n", omp_get_thread_num());
@@ -66,15 +66,21 @@ struct counters random_bench1(int times) {
     // Barrier to force OMP to start all threads at the same time
     #pragma omp barrier
 
-    struct counters data = {.failed_turns = 0,
-                            .successful_lends = 0};
+    // struct counters data = {.failed_turns = 0,
+    //                         .successful_lends = 0};
+    struct counters data;
+    data.failed_turns = 0;
+    data.successful_lends = 0;
 
-    // struct counters* data_ptr = &data;
+
+    int* data_ptr_ft = &(data.failed_turns);
+    int* data_ptr_sl = &(data.successful_lends);
+
 
 
     for (int i=0; i<times;i++) {
 
-        critical_section(&data->failed_turns, &data->successful_lends);
+        critical_section(data_ptr_ft, data_ptr_sl);
     }
 
     return data;
@@ -118,9 +124,9 @@ struct bench_result small_bench(int t, int len) { // t is number of threads, len
 int main(int argc, char * argv[]) {
     (void) argc;
     (void) argv;
-    small_bench(1, 10);
     small_bench(2, 10);
-    small_bench(4, 10);
-    small_bench(8, 10);
-    small_bench(16, 10);
+    // small_bench(2, 10);
+    // small_bench(4, 10);
+    // small_bench(8, 10);
+    // small_bench(16, 10);
 }
