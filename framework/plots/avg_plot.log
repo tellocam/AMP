@@ -1,10 +1,10 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2022.9.23)  11 MAY 2023 17:15
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2022.1.12)  4 JUN 2023 17:17
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
  %&-line parsing enabled.
-**/home/tellocam/CSE/AMP/framework/plots/avg_plot.tex
-(/home/tellocam/CSE/AMP/framework/plots/avg_plot.tex
+**/home/tellocam/Projects/AMP/framework/plots/avg_plot.tex
+(/home/tellocam/Projects/AMP/framework/plots/avg_plot.tex
 LaTeX2e <2020-02-02> patch level 2
 L3 programming layer <2020-02-14> (/usr/share/texlive/texmf-dist/tex/latex/standalone/standalone.cls
 Document Class: standalone 2018/03/26 v1.3a Class to compile TeX sub-files standalone
@@ -299,7 +299,7 @@ File: pgflibraryplotmarks.code.tex 2020/01/08 v3.1.5b (3.1.5b)
 File: l3backend-pdfmode.def 2020-02-03 L3 backend support: PDF mode
 \l__kernel_color_stack_int=\count272
 \l__pdf_internal_box=\box58
-) (/home/tellocam/CSE/AMP/framework/plots/avg_plot.aux)
+) (/home/tellocam/Projects/AMP/framework/plots/avg_plot.aux)
 \openout1 = `avg_plot.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 8.
@@ -339,7 +339,7 @@ File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Live
 Package pgfplots Warning: running in backwards compatibility mode (unsuitable tick labels; missing features). Consider writing \pgfplotsset{compat=1.16} into your preamble.
  on input line 8.
 
-/home/tellocam/CSE/AMP/framework/plots/avg_plot.tex:21: Undefined control sequence.
+/home/tellocam/Projects/AMP/framework/plots/avg_plot.tex:21: Undefined control sequence.
 \pgfplotstableread@filename ->\DATAPATH 
                                         /avg/smallbench_10.data
 l.21 ... table {\DATAPATH/avg/smallbench_10.data};
@@ -350,7 +350,7 @@ misspelled it (e.g., `\hobx'), type `I' and the correct
 spelling (e.g., `I\hbox'). Otherwise just continue,
 and I'll forget about whatever was undefined.
 
-/home/tellocam/CSE/AMP/framework/plots/avg_plot.tex:21: Undefined control sequence.
+/home/tellocam/Projects/AMP/framework/plots/avg_plot.tex:21: Undefined control sequence.
 \pgfplotstableread@filename ->\DATAPATH 
                                         /avg/smallbench_10.data
 l.21 ... table {\DATAPATH/avg/smallbench_10.data};
@@ -362,7 +362,7 @@ spelling (e.g., `I\hbox'). Otherwise just continue,
 and I'll forget about whatever was undefined.
 
 
-/home/tellocam/CSE/AMP/framework/plots/avg_plot.tex:21: Undefined control sequence.
+/home/tellocam/Projects/AMP/framework/plots/avg_plot.tex:21: Undefined control sequence.
 \pgfplotstableread@filename ->\DATAPATH 
                                         /avg/smallbench_10.data
 l.21 ... table {\DATAPATH/avg/smallbench_10.data};
@@ -373,7 +373,7 @@ misspelled it (e.g., `\hobx'), type `I' and the correct
 spelling (e.g., `I\hbox'). Otherwise just continue,
 and I'll forget about whatever was undefined.
 
-/home/tellocam/CSE/AMP/framework/plots/avg_plot.tex:21: Package pgfplots Error: Could not read table file '/avg/smallbench_10.data' in 'search path=.'. In case you intended to provide inline data: maybe TeX screwed up your end-of-lines? Try `row sep=crcr' and terminate your lines with `\\' (refer to the pgfplotstable manual for details).
+/home/tellocam/Projects/AMP/framework/plots/avg_plot.tex:21: Package pgfplots Error: Could not read table file '/avg/smallbench_10.data' in 'search path=.'. In case you intended to provide inline data: maybe TeX screwed up your end-of-lines? Try `row sep=crcr' and terminate your lines with `\\' (refer to the pgfplotstable manual for details).
 
 See the pgfplots package documentation for explanation.
 Type  H <return>  for immediate help.
@@ -386,7 +386,7 @@ command, so I can't give any explicit help.
 Pretend that you're Hercule Poirot: Examine all clues,
 and deduce the truth by order and method.
 
-/home/tellocam/CSE/AMP/framework/plots/avg_plot.tex:21: Undefined control sequence.
+/home/tellocam/Projects/AMP/framework/plots/avg_plot.tex:21: Undefined control sequence.
 \pgfplotstableread@filename ->\DATAPATH 
                                         /avg/smallbench_10.data
 l.21 ... table {\DATAPATH/avg/smallbench_10.data};
@@ -402,7 +402,7 @@ PGFPlots: reading {/avg/smallbench_10.data}
 Package pgfplots Warning: the current plot has no coordinates (or all have been filtered away) on input line 21.
 
  [warning /pgfplots/warning/plot without coordinates]
-/home/tellocam/CSE/AMP/framework/plots/avg_plot.tex:24: Undefined control sequence.
+/home/tellocam/Projects/AMP/framework/plots/avg_plot.tex:24: Undefined control sequence.
 \pgfplotstableread@filename ->\DATAPATH 
                                         /avg/smallbench_100.data
 l.24 ...table {\DATAPATH/avg/smallbench_100.data};
@@ -413,7 +413,7 @@ misspelled it (e.g., `\hobx'), type `I' and the correct
 spelling (e.g., `I\hbox'). Otherwise just continue,
 and I'll forget about whatever was undefined.
 
-/home/tellocam/CSE/AMP/framework/plots/avg_plot.tex:24: Undefined control sequence.
+/home/tellocam/Projects/AMP/framework/plots/avg_plot.tex:24: Undefined control sequence.
 \pgfplotstableread@filename ->\DATAPATH 
                                         /avg/smallbench_100.data
 l.24 ...table {\DATAPATH/avg/smallbench_100.data};
@@ -425,7 +425,7 @@ spelling (e.g., `I\hbox'). Otherwise just continue,
 and I'll forget about whatever was undefined.
 
 
-/home/tellocam/CSE/AMP/framework/plots/avg_plot.tex:24: Undefined control sequence.
+/home/tellocam/Projects/AMP/framework/plots/avg_plot.tex:24: Undefined control sequence.
 \pgfplotstableread@filename ->\DATAPATH 
                                         /avg/smallbench_100.data
 l.24 ...table {\DATAPATH/avg/smallbench_100.data};
@@ -436,7 +436,7 @@ misspelled it (e.g., `\hobx'), type `I' and the correct
 spelling (e.g., `I\hbox'). Otherwise just continue,
 and I'll forget about whatever was undefined.
 
-/home/tellocam/CSE/AMP/framework/plots/avg_plot.tex:24: Package pgfplots Error: Could not read table file '/avg/smallbench_100.data' in 'search path=.'. In case you intended to provide inline data: maybe TeX screwed up your end-of-lines? Try `row sep=crcr' and terminate your lines with `\\' (refer to the pgfplotstable manual for details).
+/home/tellocam/Projects/AMP/framework/plots/avg_plot.tex:24: Package pgfplots Error: Could not read table file '/avg/smallbench_100.data' in 'search path=.'. In case you intended to provide inline data: maybe TeX screwed up your end-of-lines? Try `row sep=crcr' and terminate your lines with `\\' (refer to the pgfplotstable manual for details).
 
 See the pgfplots package documentation for explanation.
 Type  H <return>  for immediate help.
@@ -446,7 +446,7 @@ l.24 ...table {\DATAPATH/avg/smallbench_100.data};
                                                   
 (That was another \errmessage.)
 
-/home/tellocam/CSE/AMP/framework/plots/avg_plot.tex:24: Undefined control sequence.
+/home/tellocam/Projects/AMP/framework/plots/avg_plot.tex:24: Undefined control sequence.
 \pgfplotstableread@filename ->\DATAPATH 
                                         /avg/smallbench_100.data
 l.24 ...table {\DATAPATH/avg/smallbench_100.data};
@@ -472,17 +472,17 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <5> on input line 27.
 [1
 
-{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] (/home/tellocam/CSE/AMP/framework/plots/avg_plot.aux) ) 
+{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] (/home/tellocam/Projects/AMP/framework/plots/avg_plot.aux) ) 
 Here is how much of TeX's memory you used:
  22322 strings out of 481239
- 596556 string characters out of 5920377
+ 596601 string characters out of 5920377
  952962 words of memory out of 5000000
  37252 multiletter control sequences out of 15000+600000
  532338 words of font info for 24 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 68i,10n,98p,774b,1849s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 68i,10n,98p,779b,1849s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb>
-Output written on /home/tellocam/CSE/AMP/framework/plots/avg_plot.pdf (1 page, 22733 bytes).
+Output written on /home/tellocam/Projects/AMP/framework/plots/avg_plot.pdf (1 page, 22733 bytes).
 PDF statistics:
  19 PDF objects out of 1000 (max. 8388607)
  13 compressed objects within 1 object stream

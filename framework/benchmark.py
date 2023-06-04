@@ -6,8 +6,8 @@ class cBenchCounters(ctypes.Structure):
     '''
     This has to match the returned struct in library.c
     '''
-    _fields_ = [ ("failed_turns", ctypes.c_int),
-                 ("successful_lends", ctypes.c_int) ]
+    _fields_ = [ ("failed_lockAcq", ctypes.c_int),
+                 ("successful_lockAcq", ctypes.c_int) ]
 
 class cBenchResult(ctypes.Structure):
     '''
