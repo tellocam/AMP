@@ -1,9 +1,9 @@
 # Fdb version 3
-["pdflatex"] 1685891821 "/home/tellocam/Projects/AMP/framework/plots/avg_plot.tex" "/home/tellocam/Projects/AMP/framework/plots/avg_plot.pdf" "avg_plot" 1685891821
+["pdflatex"] 1685892211 "/home/tellocam/Projects/AMP/framework/plots/avg_plot.tex" "/home/tellocam/Projects/AMP/framework/plots/avg_plot.pdf" "avg_plot" 1685892211
   "/dev/null" 1685887162 0 d41d8cd98f00b204e9800998ecf8427e ""
   "/etc/texmf/web2c/texmf.cnf" 1642008334 475 c0e671620eb5563b2130f56340a5fde8 ""
-  "/home/tellocam/Projects/AMP/framework/plots/avg_plot.aux" 1685891821 8 a94a2480d3289e625eea47cd1b285758 ""
-  "/home/tellocam/Projects/AMP/framework/plots/avg_plot.tex" 1685891820 1062 760c6b05454942d2f920af3ba4cffb52 ""
+  "/home/tellocam/Projects/AMP/framework/plots/avg_plot.aux" 1685892211 8 a94a2480d3289e625eea47cd1b285758 ""
+  "/home/tellocam/Projects/AMP/framework/plots/avg_plot.tex" 1685892210 1062 760c6b05454942d2f920af3ba4cffb52 ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb" 1248133631 36299 5f9df58c2139e7edcf37c8fca4bd384d ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb" 1248133631 35752 024fb6c41858982481f6968b5fc26508 ""
   "/usr/share/texlive/texmf-dist/tex/context/base/mkii/supp-pdf.mkii" 1461363279 71627 94eb9990bed73c364d7f53f960cc8c5b ""
@@ -139,10 +139,10 @@
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1642009051 4770781 1ed1abab22da9c3e2cc82e4db562318b ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1642009084 8256364 03535f4132ec34307c4614b330165bc9 ""
   "avg_plot.aux" 0 -1 0 "pdflatex"
-  "avg_plot.tex" 1685891820 1062 760c6b05454942d2f920af3ba4cffb52 ""
+  "avg_plot.tex" 1685892210 1062 760c6b05454942d2f920af3ba4cffb52 ""
   (generated)
   "avg_plot.log"
-  "avg_plot.aux"
-  "avg_plot.pdf"
   "/home/tellocam/Projects/AMP/framework/plots/avg_plot.pdf"
+  "avg_plot.pdf"
   "/home/tellocam/Projects/AMP/framework/plots/avg_plot.log"
+  "avg_plot.aux"
