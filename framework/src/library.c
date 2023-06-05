@@ -8,6 +8,7 @@
 
 /* These structs should match the definition in benchmark.py
  */
+
 struct counters {
     int failed_lockAcq;
     int successful_lockAcq;
@@ -19,7 +20,7 @@ struct bench_result {
 
 // Test-and-Set Lock struct
 typedef struct {
-    int flag;
+    atomic_int flag;
 } TAS_lock_t;
 
 // Initiate a "False" flagged Lock, this means, the lock is NOT acquired by any thread!
@@ -29,6 +30,7 @@ void TAS_lock_init(TAS_lock_t* lock) {
 
 
 void TAS_lock_acquire(TAS_lock_t* lock, int* fail_counter, int* succ_counter) {
+    int tid = omp_get_thread_num();
     while (atomic_flag_test_and_set(&(lock->flag))) {
         // Stay in WHILE part until the busy thread sets lock->flag = 0
         // Here we might introduce the non-atomic faileq_lockAcq +=
@@ -37,11 +39,12 @@ void TAS_lock_acquire(TAS_lock_t* lock, int* fail_counter, int* succ_counter) {
     }
     *succ_counter += 1;
 
-    printf("the succcc is %d\n", *succ_counter);
+    // printf("the succcc is %d\n", *succ_counter);
 
 }
 
 void TAS_lock_release(TAS_lock_t* lock) {
+    int tid = omp_get_thread_num();
     atomic_flag_clear(&lock->flag);
 }
 
@@ -71,8 +74,6 @@ struct counters random_bench1(int times) {
     // Barrier to force OMP to start all threads at the same time
     #pragma omp barrier
 
-    // struct counters data = {.failed_lockAcq = 0,
-    //                         .successful_lockAcq = 0};
     struct counters data;
     data.failed_lockAcq = 0;
     data.successful_lockAcq = 0;
