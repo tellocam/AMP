@@ -132,7 +132,7 @@ struct bench_result small_bench(int t, int len) { // t is number of threads, len
 int main(int argc, char * argv[]) {
     (void) argc;
     (void) argv;
-    small_bench(2, 4);
+    small_bench(6, 4);
     //small_bench(2, 10);
     //small_bench(4, 10);
     // small_bench(8, 10);
@@ -141,3 +141,4 @@ int main(int argc, char * argv[]) {
 }
 
 // gcc -fopenmp library.c -o library
+
