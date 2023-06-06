@@ -92,7 +92,7 @@ int main () {
     lock_init(queue); 
 
     // Number of threads launched -> will be read from cmd line later
-    int n = 8;
+    const int n = 8;
 
     // Create and prepare counters
     int count_success[n]; 
