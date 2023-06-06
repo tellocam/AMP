@@ -82,13 +82,13 @@ void lock_release(struct mcs_queue* queue) {
 int main () {
 
     // Allocate memory for queue
-    struct mcs_queue* queue = (struct mcs_queue*)malloc(sizeof(struct mcs_queue));
-    if (queue == NULL) {
-        fprintf(stderr, "Failed to allocate memory for queue\n");
-        exit(1); // or return an appropriate error code
-    }
+    // struct mcs_queue* queue = (struct mcs_queue*)malloc(sizeof(struct mcs_queue));
+    // if (queue == NULL) {
+    //     fprintf(stderr, "Failed to allocate memory for queue\n");
+    //     exit(1); // or return an appropriate error code
+    // }
     // Initialize the lock
-    // struct mcs_queue* queue;
+    struct mcs_queue* queue;
     lock_init(queue); 
 
     // Number of threads launched -> will be read from cmd line later
@@ -108,6 +108,8 @@ int main () {
     {
         while (count_total < 42-n) 
         {
+            
+
             int tid = omp_get_thread_num();
 
             // Acquire lock
@@ -125,7 +127,10 @@ int main () {
             printf("Lock RELEASE coming up by thread %d.\n", tid);
             lock_release(queue);
             printf("Lock RELEASED by thread %d.\n", tid);
+
+            
         }
+        #pragma omp barrier
     }
 
     for (int i = 0; i < n; i++)
