@@ -10,16 +10,19 @@
  */
 
 typedef struct {
+    int iterations;
     int failed_lockAcq;
     int successful_lockAcq;
-    float thread_wait;
-    float time;
+    float wait_mean;
+    float wait_min;
+    float wait_max
+    float 
 } threadBenchData;
 
 typedef struct{
-    float total_time;
-    float avg_wait;
     threadBenchData reduced_bench;
+    float total_time;
+
 } benchData;
 
 // Test-and-Set Lock struct
@@ -99,8 +102,8 @@ benchData bench(TAS_lock_t* lock, int threads, int times) { // t is number of th
     toc = omp_get_wtime();
 
     for (int i=0; i<t; i++) {
-        result.reduced_counters.successful_lockAcq += thread_data[i].successful_lockAcq;
-        result.reduced_counters.failed_lockAcq     += thread_data[i].failed_lockAcq;
+        result.reduced_bench.successful_lockAcq += thread_data[i].successful_lockAcq;
+        result.reduced_bench.failed_lockAcq     += thread_data[i].failed_lockAcq;
     }
 
     // printf("wanna check the number of fail: %d\n", result.reduced_counters.failed_lockAcq);
