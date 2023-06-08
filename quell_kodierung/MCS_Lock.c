@@ -1,138 +1,116 @@
-#include <stdint.h>
 #include <stdlib.h>
-#include <stdio.h>
-#include <strings.h> //
-#include <stdbool.h>
-#include <omp.h> //
 #include <stdatomic.h>
-#include <unistd.h> // für sleep()
+#include <omp.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include <unistd.h>
 
-#include <stddef.h>
+struct Node{
+   struct Node* next;
+   _Atomic bool locked;
+   char padding[64];  // avoiding false sharing with the head
+   
+} ;
 
-void sleepForOneCycle() {
-    __asm__ volatile("nop");
-    __asm__ volatile("nop");
-    __asm__ volatile("nop");
-    __asm__ volatile("nop");
-    __asm__ volatile("nop");
-    __asm__ volatile("nop");
-}
-
-struct mcs_node {
-    struct mcs_node* next;
-    bool locked;
-};
-
-struct mcs_queue {
-    atomic_intptr_t head;
-    struct mcs_node* qnode;
+struct Lock{
+   _Atomic (struct Node*) head;
+   struct Node* node;
+   char padding[64];  // avoiding false sharing with the head
 };
 
 
-
-// void lock_init(struct mcs_queue* queue) {
-//     queue->head = (atomic_intptr_t)NULL;
-//     queue->qnode->next = NULL;
-//     queue->qnode->locked = false;
-// }
-
-void lock_init(struct mcs_queue* queue) {
-    queue->head = (atomic_intptr_t)NULL;
-
-    // Allocate memory for queue->qnode
-    queue->qnode = (struct mcs_node*)malloc(sizeof(struct mcs_node));
-    if (queue->qnode == NULL) {
-        // Handle memory allocation failure
-        fprintf(stderr, "Failed to allocate memory for queue->qnode\n");
-        exit(1); // or return an appropriate error code
-    }
-
-    queue->qnode->next = NULL;
-    queue->qnode->locked = false;
+void lock_init(struct Lock* mcs_lock){
+   atomic_store_explicit(&mcs_lock->head, (struct Node*) NULL, memory_order_relaxed);   
 }
 
-void lock_acquire(struct mcs_queue* queue) {
-    struct mcs_node* pred = (struct mcs_node*)atomic_exchange(&queue->head, (intptr_t)&queue->qnode);
+void lock_acquire(struct Lock* mcs_lock){
+    struct Node* n = (struct Node*)malloc(sizeof(struct Node));
+    atomic_store_explicit(&n->next, (struct Node*) NULL, memory_order_relaxed);
+    struct Node* pred = atomic_exchange(&mcs_lock->head, n);
 
-    if (pred != NULL) {
-        queue->qnode->locked = true;
-        pred->next = queue->qnode;
-        int tid = omp_get_thread_num();
-        while (queue->qnode->locked) {}
+    if (pred != (struct Node*) NULL) {
+        atomic_store_explicit(&n->locked, true, memory_order_relaxed);   
+        pred->next = n;
+        while (atomic_load(&n->locked)){
+            // printf("HELP - %d is prisoned in while loop ACQUIRE\n", omp_get_thread_num());
+            // sleep(0.5);
+        }
+    } 
+    else {
+        mcs_lock->node = n;
     }
 }
 
-void lock_release(struct mcs_queue* queue) {
-    struct mcs_node* self = queue->qnode;
-
-    if (self->next == NULL) {
-        // No other threads are waiting -> release the lock
-        if (atomic_compare_exchange_strong(&queue->head, (intptr_t*)&self, 0)) {
+void lock_release(struct Lock* mcs_lock)
+{
+    struct Node* n = mcs_lock->node;
+    if (n->next == (struct Node*) NULL){
+        // printf("lock_release: if1\n");
+        if (atomic_compare_exchange_strong(&mcs_lock->head, &n, (struct Node*) NULL)) {
+            // printf("lock_release: if2\n");
+            free(n);
             return;
         }
-
-        // Another thread is waiting, spin-wait until it sets self->next
-        while (self->next == NULL) {}
-    }
-
-    // Notify the next waiting thread that it can acquire the lock
-    self->next->locked = false;
-}
-
-int main () {
-
-    // Allocate memory for queue
-    struct mcs_queue* queue = (struct mcs_queue*)malloc(sizeof(struct mcs_queue));
-    if (queue == NULL) {
-        fprintf(stderr, "Failed to allocate memory for queue\n");
-        exit(1); // or return an appropriate error code
-    }
-    // Initialize the lock
-    // struct mcs_queue* queue;
-    lock_init(queue); 
-
-    // Number of threads launched -> will be read from cmd line later
-    const int n = 8;
-
-    // Create and prepare counters
-    int count_success[n]; 
-    for (int i = 0; i < n; i++) {count_success[i] = 0;}
-    int count_total = 0;
-
-    // Set the number of threads
-    omp_set_num_threads(n);
-    
-
-    // Parallel region
-    #pragma omp parallel
-    {
-        while (count_total < 42-n) 
-        {
-            int tid = omp_get_thread_num();
-
-            // Acquire lock
-            lock_acquire(queue);
-            printf("Lock ACQUIRED by thread %d.\n", tid);
-
-            // Critical section
-            sleepForOneCycle();
-            // sleep(1);
-            count_success[tid] += 1;
-            printf("Thread %d is has acquired %d times.\n", tid, count_success[tid]);
-            count_total += 1;
-
-            // Release lock
-            printf("Lock RELEASE coming up by thread %d.\n", tid);
-            lock_release(queue);
-            printf("Lock RELEASED by thread %d.\n", tid);
+        else {
+        // Wait for next thread
+            n = mcs_lock->node;
+            while (n->next == (struct Node*) NULL) {
+                // printf("HELP - %d is prisoned in while loop RELEASE\n", omp_get_thread_num());
+                // sleep(1);
+            }
         }
     }
+    atomic_store_explicit(&n->next->locked, false, memory_order_relaxed);
+    mcs_lock->node = n->next;
+    n->next = (struct Node*) NULL;
+    free(n);
+    // printf("Thread %d: Released lock\n", omp_get_thread_num());
+}
 
-    for (int i = 0; i < n; i++)
+void destroy(struct Lock* mcs_lock){
+    free(atomic_load(&mcs_lock->head));
+}
+
+int main() {   
+    // Number of threads launched -> will be read from cmd line later
+    const int num_threads = 8;
+    // const int num_threads = omp_get_max_threads();
+    omp_set_num_threads(num_threads);
+
+     // Create and prepare counters
+    int count_success[num_threads]; 
+    for (int i = 0; i < num_threads; i++) {count_success[i] = 0;}
+    int count_total = 0;
+
+    // Create and allocate lock structure
+    struct Lock* lock;
+    lock = (struct Lock*)malloc(sizeof(struct Lock));
+    lock_init(lock);    
+    // Acquire and release the lock in parallel using OpenMP's parallel for directive
+    #pragma omp parallel for
+    for (int i = 0; i < 10000 - 1; i++) {
+       
+        lock_acquire(lock);
+
+        // Critical section protected by the MCS lock
+        int tid = omp_get_thread_num();
+        printf("Thread %d: Acquired critical section for %d\n", tid, i);
+        // sleep(1);  // Simulating some work inside the critical section
+        count_success[tid] += 1;
+        count_total += 1;
+        printf("Thread %d: Exiting critical section for %d\n", tid, i);
+
+        lock_release(lock);
+    }
+
+    for (int i = 0; i < num_threads; i++)
     {
         printf("Thread %d: %d / %d\n", i, count_success[i], count_total+1);
     }
-    
-    free(queue);
+
+    // free head (other nodes already freed in lock_release())
+    free(atomic_load(&lock->head));
+
     return 0;
 }
+

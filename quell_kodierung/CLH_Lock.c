@@ -1,127 +1,95 @@
-#include <stdio.h>
 #include <stdlib.h>
-#include <omp.h>
 #include <stdatomic.h>
+#include <omp.h>
+#include <stdio.h>
 #include <stdbool.h>
+#include <unistd.h>
 
-// Node structure for the CLH queue
-typedef struct clh_node {
-    atomic_bool locked;
-    struct clh_node* prev;
-} clh_node;
+struct Node{
+   struct Node* next;
+   _Atomic bool locked;
+   char padding[64];
+   
+} ;
 
-// CLH queue structure
-typedef struct clh_lock {
-    clh_node* tail;
-    clh_node node;
-} clh_lock;
+struct Lock{
+   _Atomic (struct Node*) tail;
+   struct Node* node;
+   char padding[64];  // avoiding false sharing with the tail
+};
 
-// Initialize the CLH lock
-void lock_init(clh_lock* lock) {
-    lock->tail = NULL;
-    atomic_init(&lock->node.locked, false);
-    lock->node.prev = NULL;
+
+void lock_init(struct Lock* clh_lock){
+
+    struct Node* n = (struct Node*) malloc(sizeof(struct Node));
+    atomic_store_explicit(&n->locked, false, memory_order_relaxed);
+
+    clh_lock->node = n;
+    atomic_store_explicit(&clh_lock->tail, n, memory_order_relaxed);
 }
 
-// Acquire the CLH lock
-void lock_acquire(clh_lock* lock) {
-    clh_node* node = &lock->node;
-    atomic_store_explicit(&node->locked, true, memory_order_release);
-
-    clh_node* pred = atomic_exchange_explicit(&lock->tail, node, memory_order_acq_rel);
-    if (pred != NULL) {
-        node->prev = pred;
-        while (atomic_load_explicit(&pred->locked, memory_order_acquire)) {
-            // Spin-wait
-        }
-        node->prev = NULL;
+void lock_acquire(struct Lock* clh_lock){
+    struct Node* n = (struct Node*) malloc(sizeof(struct Node));
+    atomic_store_explicit(&n->locked, true, memory_order_relaxed);
+    n->next = atomic_exchange(&clh_lock->tail, n);
+    while (atomic_load(&n->next->locked)) {
+        // printf("HELP - %d is prisoned in while loop ACQUIRE\n", omp_get_thread_num());
+        // sleep(0.5);
     }
+
+    clh_lock->node = n;
 }
 
-// Release the CLH lock
-void lock_release(clh_lock* lock) {
-    clh_node* node = &lock->node;
-    atomic_store_explicit(&node->locked, false, memory_order_release);
-    if (node->prev == NULL) {
-        clh_node* succ = node;
-        if (!atomic_compare_exchange_weak_explicit(&lock->tail, &succ, NULL, memory_order_release, memory_order_relaxed)) {
-            while (node->prev == NULL) {
-                // Spin-wait 
-            }
-        }
-    }
+void lock_release(struct Lock* clh_lock)
+{
+    atomic_store(&clh_lock->node->locked, false);
 }
 
-// int main() {
-//     // Number of threads launched -> to be read from cmd line later
-//     const int num_threads = 8;
+void destroy(struct Lock* clh_lock){
+    free(atomic_load(&clh_lock->tail));
+}
 
-//     // Create + initialize the lock
-//     clh_lock lock;
-//     lock_init(&lock);
 
-//     // Shared variable protected by the lock
-//     int counter = 0;
+int main() {   
+    // Number of threads launched -> will be read from cmd line later
+    const int num_threads = 8;
+    // const int num_threads = omp_get_max_threads();
+    omp_set_num_threads(num_threads);
 
-//     // Parallel region with multiple threads
-//     #pragma omp parallel num_threads(num_threads) shared(lock, counter)
-//     {
-//         // Acquire the lock
-//         lock_acquire(&lock);
-
-//         // Critical section
-//         counter++;
-//         printf("Thread %d incremented counter: %d\n", omp_get_thread_num(), counter);
-
-//         // Release the lock
-//         lock_release(&lock);
-//     }
-
-//     return 0;
-// }
-
-int main() {
-    
-    // Create + initialize the lock
-    clh_lock lock;
-    lock_init(&lock);
-    
-    // Number of threads launched -> to be read from cmd line later
-    const int n = 8;
-
-    // Create and prepare counters
-    int count_success[n]; 
-    for (int i = 0; i < n; i++) {count_success[i] = 0;}
+     // Create and prepare counters
+    int count_success[num_threads]; 
+    for (int i = 0; i < num_threads; i++) {count_success[i] = 0;}
     int count_total = 0;
 
-    // Parallel region with multiple threads
-    #pragma omp parallel num_threads(n) shared(lock, count_total, count_success)
-    {
-        while (count_total < 20-n) 
-        {
-            int tid = omp_get_thread_num();
+    // Create and allocate lock structure
+    struct Lock* lock;
+    lock = (struct Lock*)malloc(sizeof(struct Lock));
+    lock_init(lock);    
+    // Acquire and release the lock in parallel using OpenMP's parallel for directive
+    #pragma omp parallel for
+    for (int i = 0; i < 1000 - 1; i++) {
+       
+        lock_acquire(lock);
 
-            // Acquire lock
-            lock_acquire(&lock);
-            printf("Lock ACQUIRED by thread %d.\n", tid);
+        // Critical section protected by the MCS lock
+        int tid = omp_get_thread_num();
+        // printf("Thread %d: Acquired critical section for %d\n", tid, i);
+        // sleep(1);  // Simulating some work inside the critical section
+        count_success[tid] += 1;
+        count_total += 1;
+        // printf("Thread %d: Exiting critical section for %d\n", tid, i);
 
-            // Critical section
-            // sleepForOneCycle();
-            // sleep(1);
-            count_success[tid] += 1;
-            printf("Thread %d is has acquired %d times.\n", tid, count_success[tid]);
-            count_total += 1;
-
-            // Release lock
-            printf("Lock RELEASE coming up by thread %d.\n", tid);
-            lock_release(&lock);
-            printf("Lock RELEASED by thread %d.\n", tid);
-        }
+        lock_release(lock);
     }
 
-return 0;
+    for (int i = 0; i < num_threads; i++)
+    {
+        printf("Thread %d: %d / %d\n", i, count_success[i], count_total+1);
+    }
 
+    // free head (other nodes already freed in lock_release())
+    free(atomic_load(&lock->tail));
+
+    return 0;
 }
-
-
 

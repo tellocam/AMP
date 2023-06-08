@@ -21,7 +21,8 @@ binary = ctypes.CDLL( f"{basedir}/library.so" )
 
 binary.small_bench.restype = cBenchResult
 
-new_res = binary.small_bench(6,4)
+new_res = binary.small_bench(10,4)
 
-print(type(new_res.counters.failed_lockAcq))
+# print(type(new_res.counters.failed_lockAcq))
+# print(new_res.counters.failed_lockAcq)
 print(new_res.counters.failed_lockAcq)
