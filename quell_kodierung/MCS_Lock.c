@@ -8,27 +8,28 @@
 struct Node{
    struct Node* next;
    _Atomic bool locked;
-   char padding[64];
+   char padding[64];  // avoiding false sharing with the head
    
 } ;
 
 struct Lock{
    _Atomic (struct Node*) head;
    struct Node* node;
+   char padding[64];  // avoiding false sharing with the head
 };
 
 
 void lock_init(struct Lock* mcs_lock){
-   atomic_store(&mcs_lock->head, (struct Node*) NULL);   
+   atomic_store_explicit(&mcs_lock->head, (struct Node*) NULL, memory_order_relaxed);   
 }
 
 void lock_acquire(struct Lock* mcs_lock){
     struct Node* n = (struct Node*)malloc(sizeof(struct Node));
-    atomic_store(&n->next, (struct Node*) NULL);
+    atomic_store_explicit(&n->next, (struct Node*) NULL, memory_order_relaxed);
     struct Node* pred = atomic_exchange(&mcs_lock->head, n);
 
     if (pred != (struct Node*) NULL) {
-        atomic_store(&n->locked, true);   
+        atomic_store_explicit(&n->locked, true, memory_order_relaxed);   
         pred->next = n;
         while (atomic_load(&n->locked)){
             // printf("HELP - %d is prisoned in while loop ACQUIRE\n", omp_get_thread_num());
@@ -59,7 +60,7 @@ void lock_release(struct Lock* mcs_lock)
             }
         }
     }
-    atomic_store(&n->next->locked, false);
+    atomic_store_explicit(&n->next->locked, false, memory_order_relaxed);
     mcs_lock->node = n->next;
     n->next = (struct Node*) NULL;
     free(n);
@@ -70,9 +71,7 @@ void destroy(struct Lock* mcs_lock){
     free(atomic_load(&mcs_lock->head));
 }
 
-
 int main() {   
-
     // Number of threads launched -> will be read from cmd line later
     const int num_threads = 8;
     // const int num_threads = omp_get_max_threads();
@@ -83,13 +82,13 @@ int main() {
     for (int i = 0; i < num_threads; i++) {count_success[i] = 0;}
     int count_total = 0;
 
-    // Create an array of mcs_node structs to represent multiple threads
+    // Create and allocate lock structure
     struct Lock* lock;
     lock = (struct Lock*)malloc(sizeof(struct Lock));
     lock_init(lock);    
     // Acquire and release the lock in parallel using OpenMP's parallel for directive
     #pragma omp parallel for
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < 10000 - 1; i++) {
        
         lock_acquire(lock);
 

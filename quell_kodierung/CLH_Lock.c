@@ -1,58 +1,59 @@
-#include <stdint.h>
 #include <stdlib.h>
-#include <stdio.h>
-#include <strings.h> //
-#include <stdbool.h>
-#include <omp.h> //
 #include <stdatomic.h>
-#include <unistd.h> // für sleep()
+#include <omp.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include <unistd.h>
 
-#include <stddef.h>
+struct Node{
+   struct Node* next;
+   _Atomic bool locked;
+   char padding[64];
+   
+} ;
 
-struct clh_node {
-    struct clh_node* next;
-    bool locked;
+struct Lock{
+   _Atomic (struct Node*) tail;
+   struct Node* node;
+   char padding[64];  // avoiding false sharing with the tail
 };
 
-// global variable 
-_Atomic struct clh_node* tail;
 
-void lock_init() {
-    tail = (_Atomic struct clh_node*)malloc(sizeof(struct clh_node));
-    tail->locked = false;
-    tail->next = NULL;
-    
-    
+void lock_init(struct Lock* clh_lock){
+
+    struct Node* n = (struct Node*) malloc(sizeof(struct Node));
+    atomic_store_explicit(&n->locked, false, memory_order_relaxed);
+
+    clh_lock->node = n;
+    atomic_store_explicit(&clh_lock->tail, n, memory_order_relaxed);
 }
 
-void lock_acquire(struct clh_node* my_node) {
-    my_node->locked = true;
-    my_node->next = atomic_exchange(&tail, my_node);
-
-    while (my_node->next->locked)
-    {
-        printf("HELP - %d is prisoned in while loop ACQUIRE\n", omp_get_thread_num());
-        sleep(0.5);
+void lock_acquire(struct Lock* clh_lock){
+    struct Node* n = (struct Node*) malloc(sizeof(struct Node));
+    atomic_store_explicit(&n->locked, true, memory_order_relaxed);
+    n->next = atomic_exchange(&clh_lock->tail, n);
+    while (atomic_load(&n->next->locked)) {
+        // printf("HELP - %d is prisoned in while loop ACQUIRE\n", omp_get_thread_num());
+        // sleep(0.5);
     }
-    
+
+    clh_lock->node = n;
 }
 
-void lock_release(struct clh_node* my_node) {
-    my_node->next = NULL;
-    my_node->locked = false;
+void lock_release(struct Lock* clh_lock)
+{
+    atomic_store(&clh_lock->node->locked, false);
+}
 
-    printf("Thread %d: Released lock\n", omp_get_thread_num());
+void destroy(struct Lock* clh_lock){
+    free(atomic_load(&clh_lock->tail));
 }
 
 
-int main() {
-    // printf("Current issue: (last) lock_release() ends in deadlock\n");
-    lock_init();
-
+int main() {   
     // Number of threads launched -> will be read from cmd line later
-    const int num_threads = 4;
+    const int num_threads = 8;
     // const int num_threads = omp_get_max_threads();
-    // Set the number of threads
     omp_set_num_threads(num_threads);
 
      // Create and prepare counters
@@ -60,27 +61,25 @@ int main() {
     for (int i = 0; i < num_threads; i++) {count_success[i] = 0;}
     int count_total = 0;
 
-    // Create an array of clh_node structs to represent multiple threads
-    struct clh_node* nodes = (struct clh_node*)malloc(num_threads * sizeof(struct clh_node));
-    // struct clh_node* nodes = (struct clh_node*)malloc(2*num_threads * sizeof(struct clh_node));
-    
+    // Create and allocate lock structure
+    struct Lock* lock;
+    lock = (struct Lock*)malloc(sizeof(struct Lock));
+    lock_init(lock);    
     // Acquire and release the lock in parallel using OpenMP's parallel for directive
     #pragma omp parallel for
-    for (int i = 0; i < 32 - num_threads; i++) {
-        int tid = omp_get_thread_num();
-        struct clh_node* my_node = &nodes[i];
-        // struct clh_node* my_node = &nodes[(count_success[tid]%2)+2*i];
-        lock_acquire(my_node);
+    for (int i = 0; i < 1000 - 1; i++) {
+       
+        lock_acquire(lock);
 
-        // Critical section protected by the CLH lock
-        // int tid = omp_get_thread_num();
+        // Critical section protected by the MCS lock
+        int tid = omp_get_thread_num();
         // printf("Thread %d: Acquired critical section for %d\n", tid, i);
         // sleep(1);  // Simulating some work inside the critical section
         count_success[tid] += 1;
         count_total += 1;
         // printf("Thread %d: Exiting critical section for %d\n", tid, i);
 
-        lock_release(my_node);
+        lock_release(lock);
     }
 
     for (int i = 0; i < num_threads; i++)
@@ -88,8 +87,9 @@ int main() {
         printf("Thread %d: %d / %d\n", i, count_success[i], count_total+1);
     }
 
-    // free(count_success);
-    free(nodes);
+    // free head (other nodes already freed in lock_release())
+    free(atomic_load(&lock->tail));
 
     return 0;
 }
+
