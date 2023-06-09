@@ -13,44 +13,52 @@
 /*
 non-atomic correctness struct
 */
-struct counters {
-    int failed_lockAcq;
-    int successful_lockAcq;
-};
+// struct counters {
+//     int failed_lockAcq;
+//     int successful_lockAcq;
+// };
 
 
-struct bench_result {
-    float time;
-    struct counters reduced_counters;
-};
+// struct bench_result {
+//     float time;
+//     struct counters reduced_counters;
+// };
 
 
-//define number of threads
+// define number of threads
 #define N 8
+// define thread local variables
+__thread int mySlot;
 
-typedef struct {
-    bool flags[N];
-    int tail;
+typedef struct Array_lock_t{
+    // bool flags[N];
+    // int tail;
+    bool* flags;
+    _Atomic int tail;
 } Array_lock_t;
 
 
+
 void lock_init(Array_lock_t* lock) {
-    lock->tail = 0;
+    // allocate memory for flags
+    lock->flags = malloc(N*sizeof(bool));
     lock->flags[0] = true;
     for (int i=1; i < N; i++){
         lock->flags[i] = false;  
     }
+    // lock->tail = 0;
+    atomic_store_explicit(&lock->flags[0], true, memory_order_relaxed);
 }
 
-void lock_acquire(Array_lock_t* lock, int *mySlot) {
-    *mySlot = atomic_fetch_add(&lock->tail,1)%N;
-    while (!lock->flags[*mySlot]) {};
+void lock_acquire(Array_lock_t* lock) {
+    mySlot = atomic_fetch_add(&lock->tail,1)%N;
+    while (!lock->flags[mySlot]) {};
 }
 
-void lock_release(Array_lock_t* lock, int *mySlot) {
+void lock_release(Array_lock_t* lock) {
     //#pragma omp atomic
-    lock->flags[*mySlot] = false;
-    lock->flags[(*mySlot + 1) % N] = true;
+    lock->flags[mySlot] = false;
+    lock->flags[(mySlot + 1) % N] = true;
 }
 
 
@@ -77,18 +85,18 @@ int main() {
     #pragma omp parallel
     {
         //int* shared_served = &served;
-        while (count_total < 20-n) 
+        while (count_total < 100000-n) 
         {
             // critical_section(count_success, count_total);
 
             // Acquire lock
-            lock_acquire(&lock, );
+            lock_acquire(&lock);
 
             // Critical section
             // sleepForOneCycle();
             int tid = omp_get_thread_num();
             count_success[tid] += 1;
-            printf("Thread %d has acquired %d times.\n", tid, count_success[tid]);
+            // printf("Thread %d has acquired %d times.\n", tid, count_success[tid]);
             count_total += 1;
 
             // Release lock
