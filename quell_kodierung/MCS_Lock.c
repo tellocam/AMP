@@ -67,9 +67,6 @@ void lock_release(struct Lock* mcs_lock)
     // printf("Thread %d: Released lock\n", omp_get_thread_num());
 }
 
-void destroy(struct Lock* mcs_lock){
-    free(atomic_load(&mcs_lock->head));
-}
 
 int main() {   
     // Number of threads launched -> will be read from cmd line later

@@ -45,10 +45,6 @@ void lock_release(struct Lock* clh_lock)
     atomic_store(&clh_lock->node->locked, false);
 }
 
-void destroy(struct Lock* clh_lock){
-    free(atomic_load(&clh_lock->tail));
-}
-
 
 int main() {   
     // Number of threads launched -> will be read from cmd line later
