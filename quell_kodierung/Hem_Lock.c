@@ -23,28 +23,54 @@ void lock_init(struct Lock* hem_lock){
    atomic_store_explicit(&hem_lock->node, (struct Node*) NULL, memory_order_relaxed);  
 }
 
+// void lock_acquire(struct Lock* hem_lock){
+//     // n hier = self paper
+//     struct Node* n = (struct Node*)malloc(sizeof(struct Node));
+//     atomic_store_explicit(&n->grant,  (struct Lock*) NULL, memory_order_relaxed);
+    
+//     // Enqueue n at tail of implicit queue
+//     struct Node* pred = (struct Node*) atomic_exchange(&hem_lock->tail, n);
+
+//     if (pred != (struct Node*) NULL) {
+//         // Contention: must wait
+//         while (atomic_load(&pred->grant) != atomic_load(&hem_lock)){
+//             // printf("HELP - %d is prisoned in while loop ACQUIRE\n", omp_get_thread_num());
+//             // if (atomic_load(&hem_lock) == (struct Lock*) NULL) {printf("oh no no no no .. \n");}
+//             // sleep(1);
+//         }
+//         // printf("YES - %d finished while loop ACQUIRE\n", omp_get_thread_num());
+//         atomic_store_explicit(&pred->grant, (struct Lock*) NULL, memory_order_relaxed);
+//     } 
+   
+//     atomic_store(&hem_lock->node, n);
+//     // hem_lock->node = n;
+// }
+
 void lock_acquire(struct Lock* hem_lock){
-    // n hier = self paper
     struct Node* n = (struct Node*)malloc(sizeof(struct Node));
-    atomic_store_explicit(&n->grant,  (struct Lock*) NULL, memory_order_relaxed);
+    atomic_store_explicit(&n->grant, (struct Lock*)NULL, memory_order_relaxed);
     
     // Enqueue n at tail of implicit queue
     struct Node* pred = (struct Node*) atomic_exchange(&hem_lock->tail, n);
 
-    if (pred != (struct Node*) NULL) {
-        // Contention: must wait
-        while (atomic_load(&pred->grant) != atomic_load(&hem_lock)){
-            // printf("HELP - %d is prisoned in while loop ACQUIRE\n", omp_get_thread_num());
-            // if (atomic_load(&hem_lock) == (struct Lock*) NULL) {printf("oh no no no no .. \n");}
-            // sleep(1);
+    if (pred != (struct Node*)NULL) {
+        // Link the previous node to the current node
+        atomic_store_explicit(&pred->grant, (struct Lock*)n, memory_order_relaxed);
+
+        // Wait until the current node's grant field is set to NULL
+        while (atomic_load(&n->grant) != (struct Lock*)NULL){
+            // ...
         }
-        // printf("YES - %d finished while loop ACQUIRE\n", omp_get_thread_num());
-        atomic_store_explicit(&pred->grant, (struct Lock*) NULL, memory_order_relaxed);
-    } 
+
+        // The previous node is no longer needed
+        free(pred);
+    }
    
-    atomic_store(&hem_lock->node, n);
-    // hem_lock->node = n;
+    atomic_store_explicit(&hem_lock->node, n, memory_order_relaxed);
 }
+
+
+
 
 void lock_release(struct Lock* hem_lock)
 {
@@ -70,7 +96,7 @@ void lock_release(struct Lock* hem_lock)
 
 int main() {   
     // Number of threads launched -> will be read from cmd line later
-    const int num_threads = 8;
+    const int num_threads = 20;
     // const int num_threads = omp_get_max_threads();
     omp_set_num_threads(num_threads);
 
