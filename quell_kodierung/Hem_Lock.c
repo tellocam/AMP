@@ -70,8 +70,6 @@ void lock_acquire(struct Lock* hem_lock){
 }
 
 
-
-
 void lock_release(struct Lock* hem_lock)
 {
     struct Node* n = hem_lock->node;
@@ -96,7 +94,7 @@ void lock_release(struct Lock* hem_lock)
 
 int main() {   
     // Number of threads launched -> will be read from cmd line later
-    const int num_threads = 20;
+    const int num_threads = 19;
     // const int num_threads = omp_get_max_threads();
     omp_set_num_threads(num_threads);
 
