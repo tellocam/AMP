@@ -109,5 +109,6 @@ int main() {
         printf("Thread %d: %d / %d\n", i, count_success[i], count_total+1);
     }
     
+    free(lock.flags);
     return 0;
 }
