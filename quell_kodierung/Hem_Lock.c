@@ -39,7 +39,7 @@ void lock_init(struct Lock* hem_lock){
 //             // sleep(1);
 //         }
 //         // printf("YES - %d finished while loop ACQUIRE\n", omp_get_thread_num());
-//         atomic_store_explicit(&pred->grant, (struct Lock*) NULL, memory_order_relaxed);
+//         // atomic_store_explicit(&pred->grant, (struct Lock*) NULL, memory_order_relaxed);
 //     } 
    
 //     atomic_store(&hem_lock->node, n);
@@ -55,7 +55,7 @@ void lock_acquire(struct Lock* hem_lock){
 
     if (pred != (struct Node*)NULL) {
         // Link the previous node to the current node
-        atomic_store_explicit(&pred->grant, (struct Lock*)n, memory_order_relaxed);
+        // atomic_store_explicit(&pred->grant, (struct Lock*)n, memory_order_relaxed);
 
         // Wait until the current node's grant field is set to NULL
         while (atomic_load(&n->grant) != (struct Lock*)NULL){
@@ -63,7 +63,7 @@ void lock_acquire(struct Lock* hem_lock){
         }
 
         // The previous node is no longer needed
-        free(pred);
+        // free(pred);
     }
    
     atomic_store_explicit(&hem_lock->node, n, memory_order_relaxed);
@@ -94,7 +94,7 @@ void lock_release(struct Lock* hem_lock)
 
 int main() {   
     // Number of threads launched -> will be read from cmd line later
-    const int num_threads = 19;
+    const int num_threads = 8;
     // const int num_threads = omp_get_max_threads();
     omp_set_num_threads(num_threads);
 
@@ -109,7 +109,7 @@ int main() {
     lock_init(lock);    
     // Acquire and release the lock in parallel using OpenMP's parallel for directive
     #pragma omp parallel for
-    for (int i = 0; i < 20 - 1; i++) {
+    for (int i = 0; i < 100000 - 1; i++) {
         int tid = omp_get_thread_num();
         // printf("Thread %d: Started procedure for %d\n", tid, i);
         lock_acquire(lock);
