@@ -9,6 +9,7 @@ struct Node{
    struct Node* next;
    _Atomic bool locked;
    char padding[64];  // avoiding false sharing with the head
+   char more_padding[64];  // Additional padding
    
 } ;
 
@@ -16,6 +17,7 @@ struct Lock{
    _Atomic (struct Node*) head;
    struct Node* node;
    char padding[64];  // avoiding false sharing with the head
+   char more_padding[64];  // Additional padding
 };
 
 
@@ -41,22 +43,47 @@ void lock_acquire(struct Lock* mcs_lock){
     }
 }
 
+// void lock_release(struct Lock* mcs_lock)
+// {
+//     struct Node* n = mcs_lock->node;
+//     if (n->next == (struct Node*) NULL){
+//         // printf("lock_release: if1\n");
+//         if (atomic_compare_exchange_strong(&mcs_lock->head, &n, (struct Node*) NULL)) {
+//             // printf("lock_release: if2\n");
+//             free(n);
+//             return;
+//         }
+//         else {
+//         // Wait for next thread
+//             n = mcs_lock->node;
+//             while (n->next == (struct Node*) NULL) {
+//                 // printf("HELP - %d is prisoned in while loop RELEASE\n", omp_get_thread_num());
+//                 // sleep(1);
+//             }
+//         }
+//     }
+//     atomic_store_explicit(&n->next->locked, false, memory_order_relaxed);
+//     mcs_lock->node = n->next;
+//     n->next = (struct Node*) NULL;
+//     free(n);
+//     // printf("Thread %d: Released lock\n", omp_get_thread_num());
+// }
+
 void lock_release(struct Lock* mcs_lock)
 {
     struct Node* n = mcs_lock->node;
     if (n->next == (struct Node*) NULL){
-        // printf("lock_release: if1\n");
         if (atomic_compare_exchange_strong(&mcs_lock->head, &n, (struct Node*) NULL)) {
-            // printf("lock_release: if2\n");
             free(n);
             return;
         }
         else {
-        // Wait for next thread
+            // Wait for next thread
             n = mcs_lock->node;
             while (n->next == (struct Node*) NULL) {
-                // printf("HELP - %d is prisoned in while loop RELEASE\n", omp_get_thread_num());
-                // sleep(1);
+                // Spin wait
+                // Add some kind of pause or sleep to reduce CPU usage
+                // For example: usleep(1000);
             }
         }
     }
@@ -64,13 +91,12 @@ void lock_release(struct Lock* mcs_lock)
     mcs_lock->node = n->next;
     n->next = (struct Node*) NULL;
     free(n);
-    // printf("Thread %d: Released lock\n", omp_get_thread_num());
 }
 
 
 int main() {   
     // Number of threads launched -> will be read from cmd line later
-    const int num_threads = 8;
+    const int num_threads = 20;
     // const int num_threads = omp_get_max_threads();
     omp_set_num_threads(num_threads);
 
@@ -90,7 +116,9 @@ int main() {
         lock_acquire(lock);
 
         // Critical section protected by the MCS lock
+
         int tid = omp_get_thread_num();
+
         printf("Thread %d: Acquired critical section for %d\n", tid, i);
         // sleep(1);  // Simulating some work inside the critical section
         count_success[tid] += 1;
