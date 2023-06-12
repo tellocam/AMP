@@ -9,21 +9,42 @@
 /* These structs should match the definition in benchmark.py
  */
 
-typedef struct {
-    int iterations;
-    int failed_lockAcq;
-    int successful_lockAcq;
-    float wait_mean;
-    float wait_min;
-    float wait_max
-    float 
+typedef struct{
+    int fail;
+    int success;
+    float wait;
+    float fairness_dev;
 } threadBenchData;
 
 typedef struct{
-    threadBenchData reduced_bench;
-    float total_time;
-
+    float time;
+    int fail;
+    int success;
+    float wait;
+    float fairness_dev;
+    float throughput;
 } benchData;
+
+static void initializeThreadBenchData(threadBenchData* ptr){
+    ptr->fail = 0;
+    ptr->success = 0;
+    ptr->wait = 0;
+    ptr->fairness_dev = 0;
+}
+
+static void initializeBenchData(benchData* ptr){
+    ptr->time = 0;
+    ptr->fail = 0;
+    ptr->success = 0;
+    ptr->wait = 0;
+    ptr->fairness_dev = 0;
+}
+
+void threadBedtime(int sleepCycles) {
+    for(int i=0; i<sleepCycles; i++){
+        __asm__ volatile("nop");
+    };
+}
 
 // Test-and-Set Lock struct
 typedef struct {
@@ -31,91 +52,110 @@ typedef struct {
 } TAS_lock_t;
 
 // Initiate a "False" flagged Lock, this means, the lock is NOT acquired by any thread!
-void TAS_lock_init(TAS_lock_t* lock) {
+static void lock_init(TAS_lock_t* lock) {
     lock->flag = 0;
 }
 
-void TAS_lock_acquire(TAS_lock_t* lock, threadBenchData* thread_statistics) {
+static void lock_acquire(TAS_lock_t* lock, threadBenchData* thread_statistics) {
 
     float thread_tic = omp_get_wtime();
 
     while (atomic_flag_test_and_set(&(lock->flag))) {
         // Stay in WHILE part until the busy thread sets lock->flag = 0
         // Here we might introduce the non-atomic faileq_lockAcq +=
-        thread_statistics->failed_lockAcq += 1;
+        thread_statistics->fail += 1;
     };
-    thread_statistics->thread_wait = omp_get_wtime() - thread_tic;
-    thread_statistics->successful_lockAcq += 1;
 
-    // printf("the succcc is %d\n", *succ_counter);
+    thread_statistics->wait += omp_get_wtime() - thread_tic;
+    thread_statistics->success += 1;
 
 }
 
-void TAS_lock_release(TAS_lock_t* lock) {
+static void lock_release(TAS_lock_t* lock) {
     atomic_flag_clear(&lock->flag);
 }
 
-void critical_section(TAS_lock_t* lockFlag, threadBenchData* thread_statistics) {
+static void critical_section(TAS_lock_t* lockFlag, threadBenchData* thread_statistics, int sleepCycles) {
 
     // Acquire lock
-    TAS_lock_acquire(lockFlag, thread_statistics);
+
+    lock_acquire(lockFlag, thread_statistics);
+    threadBedtime(sleepCycles);
+
     // Critical section
-    printf("Thread %d is in the critical section.\n", omp_get_thread_num());
+    // printf("Thread %d is in the critical section.\n", omp_get_thread_num());
     // int tid = omp_get_thread_num();
     // printf("check the pointer.. %d \n", *succ_counter);
 
     // Release lock
-    TAS_lock_release(lockFlag);
+    lock_release(lockFlag);
 }
 
 
-threadBenchData benchPerThread(TAS_lock_t* lock, int times) {
+static threadBenchData threadBench(TAS_lock_t* lock, int times, int sleepCycles) {
 
-    int tid = omp_get_thread_num();
-    printf("Thread %d started.\n", tid);
+    // int tid = omp_get_thread_num();
+    // printf("Thread %d started.\n", tid);
     // Barrier to force OMP to start all threads at the same time
     #pragma omp barrier
     threadBenchData threadData;
-    threadData.failed_lockAcq = 0;
-    threadData.successful_lockAcq = 0;
+    threadData.fail = 0;
+    threadData.success = 0;
 
     for (int i=0; i<times;i++) {
-        critical_section(lock, &threadData);
+        critical_section(lock, &threadData, sleepCycles);
     }
 
     return threadData;
 }
 
-benchData bench(TAS_lock_t* lock, int threads, int times) { // t is number of threads, len is how many iterations!
+benchData benchTAS(int threads, int times, int sleepCycles) { // t is number of threads, len is how many iterations!
     benchData result;
+    initializeBenchData(&result);
     threadBenchData thread_data[threads];
-    double tic, toc;
+    for(int d = 0; d<threads; d++) {
+        initializeThreadBenchData(&(thread_data[d]));
+    }
 
-    omp_set_num_threads(t);
+    TAS_lock_t TAS_lock;
+    lock_init(&TAS_lock);
+
+    double tic, toc;
+    omp_set_num_threads(threads);
+    
     tic = omp_get_wtime();
     {
         #pragma omp parallel for
         for (int i=0; i<threads; i++) {
-            thread_data[i] = benchPerThread(lock, times);
+            thread_data[i] = threadBench(&TAS_lock, times, sleepCycles);
         }
     }
-    toc = omp_get_wtime();
 
-    for (int i=0; i<t; i++) {
-        result.reduced_bench.successful_lockAcq += thread_data[i].successful_lockAcq;
-        result.reduced_bench.failed_lockAcq     += thread_data[i].failed_lockAcq;
+    toc = omp_get_wtime();
+    result.time = (toc - tic);
+
+    for (int i=0; i<threads; i++) {
+        result.success += thread_data[i].success;
+        result.fail     += thread_data[i].fail;
     }
 
-    // printf("wanna check the number of fail: %d\n", result.reduced_counters.failed_lockAcq);
-    // printf("wanna check the number of succ: %d\n", result.reduced_counters.successful_lockAcq);
+    for (int i = 0; i<threads; i++) {
+        result.fairness_dev += thread_data[i].success - (result.success/threads);
+        printf("  success for thread %d is %d \n",\
+        i,thread_data[i].success);
+        // result.fairness_dev,
+        // result.throughput);
+    }
 
-    result.total_time = (toc - tic);
+    result.throughput = result.success / result.time;
+
     printf("Locks: %d Lock acquisiton requests on %d threads took: %f\n",\
-           times, threads, result.total_time);
-    printf("  with %d failed lock acquisitons and %d successful successful lock acquisitions: %f  acquisitions/s throughput\n",\
-        result.reduced_bench.failed_lockAcq,
-        result.reduced_bench.successful_lockAcq,
-        result.reduced_bench.successful_lockAcq/result.total_time);
+           times, threads, result.time);
+    printf("  with %d failed,  %d success, %f fairness dev,  %f  acquisitions/s throughput\n",\
+        result.fail,
+        result.success,
+        result.fairness_dev,
+        result.throughput);
 
     return result;
 }
@@ -123,14 +163,19 @@ benchData bench(TAS_lock_t* lock, int threads, int times) { // t is number of th
 /* main is not relevant for benchmark.py but necessary when run alone for
  * testing.
  */
+
 int main(int argc, char * argv[]) {
     (void) argc;
     (void) argv;
-    small_bench(6, 4);
-    //small_bench(2, 10);
-    //small_bench(4, 10);
-    // small_bench(8, 10);
-    // small_bench(16, 10);
+    benchTAS(12, 100, 5);
+    // benchTAS(12, 100, 5);
+    // benchTAS(12, 100, 10);
+    // benchTAS(12, 100, 100);
+    // benchTAS(12, 100, 1000);
+    // benchTAS(12, 100, 10000);
+    // benchTAS(12, 100, 100000);
+
+
 
 }
 
