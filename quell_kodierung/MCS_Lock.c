@@ -25,12 +25,15 @@ void lock_init(struct Lock* mcs_lock){
 
 void lock_acquire(struct Lock* mcs_lock){
     struct Node* n = (struct Node*)malloc(sizeof(struct Node));
+    atomic_store_explicit(&n->locked, false, memory_order_relaxed); // newly added
     atomic_store_explicit(&n->next, (struct Node*) NULL, memory_order_relaxed);
     struct Node* pred = atomic_exchange(&mcs_lock->head, n);
 
     if (pred != (struct Node*) NULL) {
         atomic_store_explicit(&n->locked, true, memory_order_relaxed);   
-        pred->next = n;
+        // pred->next = n;
+        atomic_store_explicit(&pred->next, n, memory_order_relaxed);
+
         while (atomic_load(&n->locked)){
             // printf("HELP - %d is prisoned in while loop ACQUIRE\n", omp_get_thread_num());
             // sleep(0.5);
@@ -38,12 +41,14 @@ void lock_acquire(struct Lock* mcs_lock){
     } 
     else {
         mcs_lock->node = n;
+        // atomic_store_explicit(&mcs_lock->node, n, memory_order_relaxed);
+
     }
 }
 
 void lock_release(struct Lock* mcs_lock)
 {
-    struct Node* n = mcs_lock->node;
+    struct Node* n = atomic_load(&mcs_lock->node);
     if (n->next == (struct Node*) NULL){
         // printf("lock_release: if1\n");
         if (atomic_compare_exchange_strong(&mcs_lock->head, &n, (struct Node*) NULL)) {
@@ -53,15 +58,19 @@ void lock_release(struct Lock* mcs_lock)
         }
         else {
         // Wait for next thread
-            n = mcs_lock->node;
+            n = atomic_load(&mcs_lock->node);
+            // n = mcs_lock->node; // haben wir doch schon weiter oben 
             while (n->next == (struct Node*) NULL) {
+                // n = atomic_load(&mcs_lock->node);
+            // while (atomic_load(&n->next) == (struct Node*) NULL) {
                 // printf("HELP - %d is prisoned in while loop RELEASE\n", omp_get_thread_num());
                 // sleep(1);
             }
         }
     }
-    atomic_store_explicit(&n->next->locked, false, memory_order_relaxed);
     mcs_lock->node = n->next;
+    atomic_store_explicit(&n->next->locked, false, memory_order_relaxed);
+    
     n->next = (struct Node*) NULL;
     free(n);
     // printf("Thread %d: Released lock\n", omp_get_thread_num());
@@ -85,7 +94,7 @@ int main() {
     lock_init(lock);    
     // Acquire and release the lock in parallel using OpenMP's parallel for directive
     #pragma omp parallel for
-    for (int i = 0; i < 10000 - 1; i++) {
+    for (int i = 0; i < 100000 - 1; i++) {
        
         lock_acquire(lock);
 
