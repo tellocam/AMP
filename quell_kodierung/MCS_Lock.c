@@ -116,8 +116,8 @@ int main() {
     lock = (struct Lock*)malloc(sizeof(struct Lock));
     lock_init(lock);    
     // Acquire and release the lock in parallel using OpenMP's parallel for directive
-    #pragma omp parallel for
-    for (int i = 0; i < 100000 - 1; i++) {
+    #pragma omp parallel for schedule(dynamic, 1)
+    for (int i = 0; i < 1000 - 1; i++) {
        
         lock_acquire(lock);
 

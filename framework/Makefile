@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -O3 -Wall -Wextra -fopenmp
+CFLAGS =  -fopenmp
 LDFLAGS = -shared -fopenmp
 
 SRCDIR = src
