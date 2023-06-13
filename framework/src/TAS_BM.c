@@ -102,16 +102,16 @@ benchData benchTAS(int threads, int times, int sleepCycles) {
 }
 
 
-int main() {
+// int main() {
 
-    // benchTAS(12, 100, 1);
-    // benchTAS(12, 100, 5);
-    // benchTAS(12, 100, 10);
-    // benchTAS(12, 100, 100);
-    // benchTAS(12, 100, 1000);
-    // benchTAS(12, 100, 10000);
-    // benchTAS(12, 100, 100000);
-}
+//     benchTAS(12, 100, 1);
+//     benchTAS(12, 100, 5);
+//     benchTAS(12, 100, 10);
+//     benchTAS(12, 100, 100);
+//     benchTAS(12, 100, 1000);
+//     benchTAS(12, 100, 10000);
+//     benchTAS(12, 100, 100000);
+// }
 
 // gcc -fopenmp library.c -o library
 
