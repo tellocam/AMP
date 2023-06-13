@@ -43,11 +43,13 @@ void lock_init(Array_lock_t* lock) {
     // allocate memory for flags
     lock->flags = malloc(N*sizeof(bool));
     lock->flags[0] = true;
+    // atomic_store_explicit(&lock->flags[0], true, memory_order_relaxed);
     for (int i=1; i < N; i++){
         lock->flags[i] = false;  
+        // atomic_store_explicit(&lock->flags[i], false, memory_order_relaxed);
     }
-    // lock->tail = 0;
-    atomic_store_explicit(&lock->flags[0], true, memory_order_relaxed);
+    lock->tail = 0;
+    // atomic_store_explicit(&lock->tail, 0, memory_order_relaxed);
 }
 
 void lock_acquire(Array_lock_t* lock) {
@@ -96,7 +98,7 @@ int main() {
             // sleepForOneCycle();
             int tid = omp_get_thread_num();
             count_success[tid] += 1;
-            // printf("Thread %d has acquired %d times.\n", tid, count_success[tid]);
+            printf("Thread %d has acquired %d times.\n", tid, count_success[tid]);
             count_total += 1;
 
             // Release lock

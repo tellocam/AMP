@@ -28,7 +28,7 @@ void sleepForOneCycle() {
 // Test-and-Test-and-Set Lock struct
 typedef struct {
     int ticket;
-    int served;
+    // int served;
 } TATAS_lock_t;
 
 // Initiate a "False" flagged Lock, this means, the lock is NOT acquired by any thread!
@@ -99,7 +99,7 @@ int main() {
     #pragma omp parallel
     {
         int* shared_served = &served;
-        while (count_total < 20-n) 
+        while (count_total < 1000-n) 
         {
             // critical_section(count_success, count_total);
 

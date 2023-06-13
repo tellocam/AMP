@@ -19,8 +19,10 @@ struct Lock{
 
 void lock_init(struct Lock* hem_lock){
     // ??
-   atomic_store_explicit(&hem_lock->tail, (struct Node*) NULL, memory_order_relaxed); 
-   atomic_store_explicit(&hem_lock->node, (struct Node*) NULL, memory_order_relaxed);  
+    // atomic_store_explicit(&hem_lock->tail, (struct Node*) NULL, memory_order_relaxed); 
+    hem_lock->tail = (struct Node*) NULL;
+    // atomic_store_explicit(&hem_lock->node, (struct Node*) NULL, memory_order_relaxed);  
+    hem_lock->node = (struct Node*) NULL;
 }
 
 // void lock_acquire(struct Lock* hem_lock){
@@ -48,7 +50,8 @@ void lock_init(struct Lock* hem_lock){
 
 void lock_acquire(struct Lock* hem_lock){
     struct Node* n = (struct Node*)malloc(sizeof(struct Node));
-    atomic_store_explicit(&n->grant, (struct Lock*)NULL, memory_order_relaxed);
+    // atomic_store_explicit(&n->grant, (struct Lock*)NULL, memory_order_relaxed);
+    n->grant = (struct Lock*)NULL;
     
     // Enqueue n at tail of implicit queue
     struct Node* pred = (struct Node*) atomic_exchange(&hem_lock->tail, n);
@@ -66,21 +69,24 @@ void lock_acquire(struct Lock* hem_lock){
         // free(pred);
     }
    
-    atomic_store_explicit(&hem_lock->node, n, memory_order_relaxed);
+    // atomic_store_explicit(&hem_lock->node, n, memory_order_relaxed);
+    hem_lock->node = n;
 }
 
 
 void lock_release(struct Lock* hem_lock)
 {
     struct Node* n = hem_lock->node;
-    atomic_store_explicit(&n->grant, (_Atomic (struct Lock*)) NULL, memory_order_relaxed);
+    // atomic_store_explicit(&n->grant, (_Atomic (struct Lock*)) NULL, memory_order_relaxed);
+    n->grant = (_Atomic (struct Lock*)) NULL;
 
     // CAS = compare + swap 
     struct Node* v = atomic_exchange(&hem_lock->tail, n);
 
     if (v != n){
         // One or more waiters exist -- convey ownership to successor
-        atomic_store_explicit(&n->grant, hem_lock, memory_order_relaxed);
+        // atomic_store_explicit(&n->grant, hem_lock, memory_order_relaxed);
+        n->grant = hem_lock;
         while (n->grant != (struct Lock*) NULL) {
             // printf("HELP - %d is prisoned in while loop RELEASE\n", omp_get_thread_num());
             // sleep(1);

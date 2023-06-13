@@ -22,15 +22,18 @@ struct Lock{
 void lock_init(struct Lock* clh_lock){
 
     struct Node* n = (struct Node*) malloc(sizeof(struct Node));
-    atomic_store_explicit(&n->locked, false, memory_order_relaxed);
+    // atomic_store_explicit(&n->locked, false, memory_order_relaxed);
+    n->locked = false;
 
     clh_lock->node = n;
-    atomic_store_explicit(&clh_lock->tail, n, memory_order_relaxed);
+    // atomic_store_explicit(&clh_lock->tail, n, memory_order_relaxed);
+    clh_lock->tail = n;
 }
 
 void lock_acquire(struct Lock* clh_lock){
     struct Node* n = (struct Node*) malloc(sizeof(struct Node));
-    atomic_store_explicit(&n->locked, true, memory_order_relaxed);
+    // atomic_store_explicit(&n->locked, true, memory_order_relaxed);
+    n->locked = true;
     n->next = atomic_exchange(&clh_lock->tail, n);
     while (atomic_load(&n->next->locked)) {
         // printf("HELP - %d is prisoned in while loop ACQUIRE\n", omp_get_thread_num());
@@ -42,7 +45,8 @@ void lock_acquire(struct Lock* clh_lock){
 
 void lock_release(struct Lock* clh_lock)
 {
-    atomic_store(&clh_lock->node->locked, false);
+    // atomic_store(&clh_lock->node->locked, false);
+    clh_lock->node->locked = false;
 }
 
 
@@ -63,7 +67,7 @@ int main() {
     lock_init(lock);    
     // Acquire and release the lock in parallel using OpenMP's parallel for directive
     #pragma omp parallel for
-    for (int i = 0; i < 1000 - 1; i++) {
+    for (int i = 0; i < 100000 - 1; i++) {
        
         lock_acquire(lock);
 
@@ -84,7 +88,7 @@ int main() {
     }
 
     // free head (other nodes already freed in lock_release())
-    free(atomic_load(&lock->tail));
+    free(lock->tail);
 
     return 0;
 }
