@@ -1,5 +1,8 @@
 {
     "files.associations": {
-        "TAS_Lock.C": "cpp"
+        "TAS_Lock.C": "cpp",
+        "benchUtils.C": "cpp",
+        "stdatomic.h": "c",
+        "benchutils.h": "c"
     }
 }

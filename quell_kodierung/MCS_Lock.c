@@ -102,7 +102,7 @@ void lock_release(struct Lock* mcs_lock)
 
 int main() {   
     // Number of threads launched -> will be read from cmd line later
-    const int num_threads = 20;
+    const int num_threads = 6;
     // const int num_threads = omp_get_max_threads();
     omp_set_num_threads(num_threads);
 
