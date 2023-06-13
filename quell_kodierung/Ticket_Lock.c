@@ -28,7 +28,6 @@ void sleepForOneCycle() {
 // Test-and-Test-and-Set Lock struct
 typedef struct {
     int ticket;
-    int served;
 } TATAS_lock_t;
 
 // Initiate a "False" flagged Lock, this means, the lock is NOT acquired by any thread!
@@ -47,34 +46,6 @@ void lock_release(int* served) {
 }
 
 TATAS_lock_t lock; // Declare a test-and-set lock
-
-// void critical_section() {
-//     // Acquire lock
-//     int served = 0;
-//     lock_acquire(&lock, &served);
-
-//     // Critical section
-//     // sleepForOneCycle();
-//     printf("Thread %d is in the critical section.\n", omp_get_thread_num());
-
-//     // Release lock
-//     lock_release(&served);
-// }
-
-// int main() {
-//     TATAS_lock_init(&lock); // Initialize the test-and-set lock
-
-//     // Set the number of threads
-//     omp_set_num_threads(20);
-
-//     // Parallel region
-//     #pragma omp parallel
-//     {
-//         critical_section();
-//     }
-
-//     return 0;
-// }
 
 int main() {
     lock_init(&lock); // Initialize the test-and-set lock
@@ -99,7 +70,7 @@ int main() {
     #pragma omp parallel
     {
         int* shared_served = &served;
-        while (count_total < 20-n) 
+        while (count_total < 1000-n) 
         {
             // critical_section(count_success, count_total);
 

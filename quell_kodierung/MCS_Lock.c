@@ -22,57 +22,26 @@ struct Lock{
 
 
 void lock_init(struct Lock* mcs_lock){
-   atomic_store_explicit(&mcs_lock->head, (struct Node*) NULL, memory_order_relaxed);   
+    mcs_lock->head = (struct Node*) NULL;
 }
 
 void lock_acquire(struct Lock* mcs_lock){
     struct Node* n = (struct Node*)malloc(sizeof(struct Node));
-    atomic_store_explicit(&n->locked, false, memory_order_relaxed); // newly added
-    atomic_store_explicit(&n->next, (struct Node*) NULL, memory_order_relaxed);
+    n->locked = false;
+    n->next = (struct Node*) NULL;
     struct Node* pred = atomic_exchange(&mcs_lock->head, n);
 
     if (pred != (struct Node*) NULL) {
-        atomic_store_explicit(&n->locked, true, memory_order_relaxed);   
-        // pred->next = n;
-        atomic_store_explicit(&pred->next, n, memory_order_relaxed);
-
-        while (atomic_load(&n->locked)){
-            // printf("HELP - %d is prisoned in while loop ACQUIRE\n", omp_get_thread_num());
-            // sleep(0.5);
-        }
+        n->locked = true;   
+        pred->next = n;
+        while (atomic_load(&n->locked)){};
     } 
     else {
         mcs_lock->node = n;
-        // atomic_store_explicit(&mcs_lock->node, n, memory_order_relaxed);
-
     }
 }
 
-// void lock_release(struct Lock* mcs_lock)
-// {
-//     struct Node* n = mcs_lock->node;
-//     if (n->next == (struct Node*) NULL){
-//         // printf("lock_release: if1\n");
-//         if (atomic_compare_exchange_strong(&mcs_lock->head, &n, (struct Node*) NULL)) {
-//             // printf("lock_release: if2\n");
-//             free(n);
-//             return;
-//         }
-//         else {
-//         // Wait for next thread
-//             n = mcs_lock->node;
-//             while (n->next == (struct Node*) NULL) {
-//                 // printf("HELP - %d is prisoned in while loop RELEASE\n", omp_get_thread_num());
-//                 // sleep(1);
-//             }
-//         }
-//     }
-//     atomic_store_explicit(&n->next->locked, false, memory_order_relaxed);
-//     mcs_lock->node = n->next;
-//     n->next = (struct Node*) NULL;
-//     free(n);
-//     // printf("Thread %d: Released lock\n", omp_get_thread_num());
-// }
+
 
 void lock_release(struct Lock* mcs_lock)
 {
@@ -85,15 +54,11 @@ void lock_release(struct Lock* mcs_lock)
         else {
         // Wait for next thread
             n = atomic_load(&mcs_lock->node);
-            while (n->next == (struct Node*) NULL) {
-                // Spin wait
-                // Add some kind of pause or sleep to reduce CPU usage
-                // For example: usleep(1000);
-            }
+            while (n->next == (struct Node*) NULL) {};
         }
     }
     mcs_lock->node = n->next;
-    atomic_store_explicit(&n->next->locked, false, memory_order_relaxed);
+    n->next->locked = false;
     
     n->next = (struct Node*) NULL;
     free(n);
