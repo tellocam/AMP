@@ -1,4 +1,4 @@
-#include "framework/include/benchUtils.h"
+#include "benchUtils.h"
 #include <stdio.h>
 
 void initializeThreadBenchData(threadBenchData* ptr){

@@ -4,17 +4,17 @@
 typedef struct{
     int fail;
     int success;
-    float wait;
-    float fairness_dev;
+    double wait;
+    double fairness_dev;
 } threadBenchData;
 
 typedef struct{
-    float time;
+    double time;
     int fail;
     int success;
-    float wait;
-    float fairness_dev;
-    float throughput;
+    double wait;
+    double fairness_dev;
+    double throughput;
 } benchData;
 
 void initializeBenchData(benchData* ptr);

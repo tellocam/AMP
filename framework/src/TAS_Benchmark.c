@@ -6,7 +6,7 @@
 #include <omp.h>
 #include <stdatomic.h>
 
-#include "framework/include/benchUtils.h"
+#include "benchUtils.h"
 
 // Test-and-Set Lock struct
 typedef struct {
@@ -20,15 +20,15 @@ static void lock_init(TAS_lock_t* lock) {
 
 static void lock_acquire(TAS_lock_t* lock, threadBenchData* thread_statistics) {
 
-    float thread_tic = omp_get_wtime();
-
+    double threadTic = omp_get_wtime();
     while (atomic_flag_test_and_set(&(lock->flag))) {
         // Stay in WHILE part until the busy thread sets lock->flag = 0
         // Here we might introduce the non-atomic faileq_lockAcq +=
         thread_statistics->fail += 1;
     };
+    double threadToc = omp_get_wtime();
 
-    thread_statistics->wait += omp_get_wtime() - thread_tic;
+    thread_statistics->wait += (threadToc - threadTic);
     thread_statistics->success += 1;
 
 }
@@ -61,8 +61,7 @@ static threadBenchData threadBench(TAS_lock_t* lock, int times, int sleepCycles)
     // Barrier to force OMP to start all threads at the same time
     #pragma omp barrier
     threadBenchData threadData;
-    threadData.fail = 0;
-    threadData.success = 0;
+    initializeThreadBenchData(&threadData);
 
     for (int i=0; i<times;i++) {
         critical_section(lock, &threadData, sleepCycles);
@@ -99,25 +98,26 @@ benchData benchTAS(int threads, int times, int sleepCycles) { // t is number of 
     for (int i=0; i<threads; i++) {
         result.success += thread_data[i].success;
         result.fail     += thread_data[i].fail;
+        result.wait += thread_data[i].wait;
     }
 
     for (int i = 0; i<threads; i++) {
         result.fairness_dev += thread_data[i].success - (result.success/threads);
-        printf("  success for thread %d is %d \n",\
-        i,thread_data[i].success);
+        // printf("  success for thread %d is %d \n",
+        // i,thread_data[i].success);
         // result.fairness_dev,
         // result.throughput);
     }
 
     result.throughput = result.success / result.time;
 
-    printf("Locks: %d Lock acquisiton requests on %d threads took: %f\n",\
-           times, threads, result.time);
-    printf("  with %d failed,  %d success, %f fairness dev,  %f  acquisitions/s throughput\n",\
-        result.fail,
-        result.success,
-        result.fairness_dev,
-        result.throughput);
+    // printf("TAS Lock Summary: %d Lock acquisiton requests on %d threads took: %f\n",
+    //        times, threads, result.time);
+    // printf("  with %d failed,  %d success, %f fairness dev,  %f  acquisitions/s throughput\n",
+    //     result.fail,
+    //     result.success,
+    //     result.fairness_dev,
+    //     result.throughput);
 
     return result;
 }
