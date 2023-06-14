@@ -110,69 +110,17 @@ benchData benchTicket(int threads, int times, int sleepCycles) {
 
 int main() {
 
-    benchTAS(12, 100, 1);
-    benchTAS(12, 100, 5);
-    benchTAS(12, 100, 10);
-    benchTAS(12, 100, 100);
-    benchTAS(12, 100, 1000);
-    benchTAS(12, 100, 10000);
-    benchTAS(12, 100, 100000);
+    benchTicket(2, 10000, 5);
+    benchTicket(3, 10000, 5);
+    benchTicket(4, 10000, 5);
+    benchTicket(5, 10000, 5);
+    benchTicket(6, 10000, 5);
+    benchTicket(7, 10000, 5);
+    benchTicket(8, 10000, 5);
+    benchTicket(9, 10000, 5);
+    benchTicket(10, 10000, 5);
+    benchTicket(11, 10000, 5);
+    benchTicket(12, 10000, 5);
 }
 
-gcc -fopenmp library.c -o library
-
-
-
-
-
-// ticket_lock_t lock; // Declare a test-and-set lock
-
-// int main() {
-//     lock_init(&lock); // Initialize the test-and-set lock
-
-//     // Number of threads launched -> will be read from cmd line later
-//     int n = 8;
-
-//     // Create counters
-//     int count_success[n]; 
-//     for (int i = 0; i < n; i++)
-//     {
-//         count_success[i] = 0;
-//     }
- 
-//     int count_total = 0;
-//     int served = 0;
-
-//     // Set the number of threads
-//     omp_set_num_threads(n);
-
-//     // Parallel region
-//     #pragma omp parallel
-//     {
-//         int* shared_served = &served;
-//         while (count_total < 1000-n) 
-//         {
-//             // critical_section(count_success, count_total);
-
-//             // Acquire lock
-//             lock_acquire(&lock, shared_served);
-
-//             // Critical section
-//             // sleepForOneCycle();
-//             int tid = omp_get_thread_num();
-//             count_success[tid] += 1;
-//             // printf("Thread %d is has acquired %d times with ticket %d.\n", tid, count_success[tid], served);
-//             count_total += 1;
-
-//             // Release lock
-//             lock_release(shared_served);
-//         }
-//     }
-
-//     for (int i = 0; i < n; i++)
-//     {
-//         printf("Thread %d: %d / %d\n", i, count_success[i], count_total+1);
-//     }
-    
-//     return 0;
-// }
+// gcc -fopenmp ticket_BM.c benchUtils.c -o ticket_BM
