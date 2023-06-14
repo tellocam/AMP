@@ -18,11 +18,20 @@ static void lock_init(ticket_lock_t* lock) {
     lock->ticket = 0;
 }
 
-static void lock_acquire(ticket_lock_t* lock, int *served) {
+static void lock_acquire(ticket_lock_t* lock, int *served, threadBenchData* threadData) {
+
+    int id = omp_get_thread_num();
+
     int next = atomic_fetch_add_explicit(&lock->ticket,1, 0);
+    int threadTic = omp_get_wtime();
+    
     while (*served < next) {
         // Thread within spin!
+        threadData[id].fail += 1;
     };
+
+    int threadToc = omp_get_wtime();
+    threadData[id].wait += (threadToc - threadTic);
 }
 
 static void lock_release(int* served) {
@@ -30,30 +39,37 @@ static void lock_release(int* served) {
     (*served)++;
 }
 
+static void threadBench(ticket_lock_t* lock, threadBenchData* threadData,
+                        int* successCheck, int times, int sleepCycles,
+                        int *served) {
 
-static void threadBench(ticket_lock_t* lock, threadBenchData* threadData, int* successCheck, int times, int sleepCycles) {
-    
+    int id = omp_get_thread_num();
     while (*successCheck < times) {
-        lock_acquire(lock, threadData); // Acquire Lock
+
+        lock_acquire(lock, served, threadData); // Acquire Lock
+        threadData[id].success += 1;
         (*successCheck)++; //critical Section
-        lock_release(lock); // Release lock
+        lock_release(served); // Release lock
         threadBedtime(sleepCycles); // Take a Nap
+
     }
     
 }
 
-benchData benchTAS(int threads, int times, int sleepCycles) {
+benchData benchTicket(int threads, int times, int sleepCycles) {
 
     benchData result;
     initializeBenchData(&result);
-    threadBenchData thread_data[threads];
+    threadBenchData threadData[threads];
     for(int d = 0; d<threads; d++) {
-        initializeThreadBenchData(&(thread_data[d]));
+        initializeThreadBenchData(&(threadData[d]));
     }
+
     int successCheck = 0;
 
-    ticket_lock_t TAS_lock;
-    lock_init(&TAS_lock);
+    ticket_lock_t lock;
+    lock_init(&lock);
+    int served = 0;
 
 
     double tic, toc;
@@ -64,8 +80,8 @@ benchData benchTAS(int threads, int times, int sleepCycles) {
         {
             #pragma omp parallel for
             for (int i=0; i<threads; i++) {
-                // &thread_data[0] is pointer to first entry of thread_data array, later used with pointer arithmetic
-                threadBench(&TAS_lock, &thread_data[0], &successCheck, times, sleepCycles); 
+                // &threadData[0] is pointer to first entry of threadData array, later used with pointer arithmetic
+                threadBench(&lock, &threadData[0], &successCheck, times, sleepCycles, &served); 
             }   
         }
 
@@ -73,24 +89,37 @@ benchData benchTAS(int threads, int times, int sleepCycles) {
     result.time = (toc - tic);
 
     for (int i=0; i<threads; i++) {
-        result.success += thread_data[i].success; // total success
-        result.fail     += thread_data[i].fail; // total fails
-        result.wait += thread_data[i].wait/threads; // avg wait per thread
-        result.fairness_dev += 100 * (abs(thread_data[i].success - times/threads) / (float)times); //avg fairness deviation in %
+        result.success += threadData[i].success; // total success
+        result.fail     += threadData[i].fail; // total fails
+        result.wait += threadData[i].wait/((float)times); // avg wait per thread
+        result.fairness_dev += 100 * (abs(threadData[i].success - times/threads) / (float)times); //avg fairness deviation in %
     }
 
     result.throughput = result.success / result.time;
 
-    // printf("TAS Lock Summary: %d Lock acquisiton requests on %d threads took: %f\n",
-    //        times, threads, result.time);
-    // printf("  with %d failAcq,  %d successAcq, %f %% fairness dev.,  %f  acq/s throughput\n",
-    //     result.fail,
-    //     result.success,
-    //     result.fairness_dev,
-    //     result.throughput);
+    printf("TAS Lock Summary: %d Lock acquisiton requests on %d threads took: %f\n",
+           times, threads, result.time);
+    printf("  with %d failAcq,  %d successAcq, %f %% fairness dev.,  %f  acq/s throughput\n",
+        result.fail,
+        result.success,
+        result.fairness_dev,
+        result.throughput);
 
     return result;
 }
+
+int main() {
+
+    benchTAS(12, 100, 1);
+    benchTAS(12, 100, 5);
+    benchTAS(12, 100, 10);
+    benchTAS(12, 100, 100);
+    benchTAS(12, 100, 1000);
+    benchTAS(12, 100, 10000);
+    benchTAS(12, 100, 100000);
+}
+
+gcc -fopenmp library.c -o library
 
 
 
