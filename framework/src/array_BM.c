@@ -6,4 +6,4 @@
 #include <omp.h>
 #include <stdatomic.h>
 
-#include "benchUtils.h" // Benchmark datatypes and functions
+#include "../include/benchUtils.h" // Benchmark datatypes and functions
