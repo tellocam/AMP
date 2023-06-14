@@ -67,19 +67,19 @@ benchData benchLockOMP(int threads, int times, int sleepCycles) {
     for (int i=0; i<threads; i++) {
         result.success += thread_data[i].success; // total success
         result.fail     += thread_data[i].fail; // total fails
-        result.wait += thread_data[i].wait/threads; // avg wait per thread
+        result.wait += thread_data[i].wait/(float)times; // avg wait per thread
         result.fairness_dev += 100 * (abs(thread_data[i].success - times/threads) / (float)times); //avg fairness deviation in %
     }
 
     result.throughput = result.success / result.time;
 
-    printf("TAS Lock Summary: %d Lock acquisiton requests on %d threads took: %f\n",
-           times, threads, result.time);
-    printf("  with %d failAcq,  %d successAcq, %f %% fairness dev.,  %f  acq/s throughput\n",
-        result.fail,
-        result.success,
-        result.fairness_dev,
-        result.throughput);
+    // printf("TAS Lock Summary: %d Lock acquisiton requests on %d threads took: %f\n",
+    //        times, threads, result.time);
+    // printf("  with %d failAcq,  %d successAcq, %f %% fairness dev.,  %f  acq/s throughput\n",
+    //     result.fail,
+    //     result.success,
+    //     result.fairness_dev,
+    //     result.throughput);
 
     return result;
 }
@@ -96,5 +96,5 @@ benchData benchLockOMP(int threads, int times, int sleepCycles) {
 
 // }
 
-// gcc -fopenmp library.c -o library
+// gcc -fopenmp ompLock_BM.c benchUtils.c -o ompLock_BM
 

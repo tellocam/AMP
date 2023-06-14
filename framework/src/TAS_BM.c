@@ -84,7 +84,7 @@ benchData benchTAS(int threads, int times, int sleepCycles) {
     for (int i=0; i<threads; i++) {
         result.success += thread_data[i].success; // total success
         result.fail     += thread_data[i].fail; // total fails
-        result.wait += thread_data[i].wait/threads; // avg wait per thread
+        result.wait += thread_data[i].wait/((float)times); // avg wait per thread
         result.fairness_dev += 100 * (abs(thread_data[i].success - times/threads) / (float)times); //avg fairness deviation in %
     }
 
@@ -113,5 +113,5 @@ benchData benchTAS(int threads, int times, int sleepCycles) {
 //     benchTAS(12, 100, 100000);
 // }
 
-// gcc -fopenmp library.c -o library
+// gcc -fopenmp TAS_BM.c benchUtils.c -o TAS_BM
 

@@ -97,30 +97,30 @@ benchData benchTicket(int threads, int times, int sleepCycles) {
 
     result.throughput = result.success / result.time;
 
-    printf("TAS Lock Summary: %d Lock acquisiton requests on %d threads took: %f\n",
-           times, threads, result.time);
-    printf("  with %d failAcq,  %d successAcq, %f %% fairness dev.,  %f  acq/s throughput\n",
-        result.fail,
-        result.success,
-        result.fairness_dev,
-        result.throughput);
+    // printf("TAS Lock Summary: %d Lock acquisiton requests on %d threads took: %f\n",
+    //        times, threads, result.time);
+    // printf("  with %d failAcq,  %d successAcq, %f %% fairness dev.,  %f  acq/s throughput\n",
+    //     result.fail,
+    //     result.success,
+    //     result.fairness_dev,
+    //     result.throughput);
 
     return result;
 }
 
-int main() {
+// int main() {
 
-    benchTicket(2, 10000, 5);
-    benchTicket(3, 10000, 5);
-    benchTicket(4, 10000, 5);
-    benchTicket(5, 10000, 5);
-    benchTicket(6, 10000, 5);
-    benchTicket(7, 10000, 5);
-    benchTicket(8, 10000, 5);
-    benchTicket(9, 10000, 5);
-    benchTicket(10, 10000, 5);
-    benchTicket(11, 10000, 5);
-    benchTicket(12, 10000, 5);
-}
+//     benchTicket(2, 10000, 5);
+//     benchTicket(3, 10000, 5);
+//     benchTicket(4, 10000, 5);
+//     benchTicket(5, 10000, 5);
+//     benchTicket(6, 10000, 5);
+//     benchTicket(7, 10000, 5);
+//     benchTicket(8, 10000, 5);
+//     benchTicket(9, 10000, 5);
+//     benchTicket(10, 10000, 5);
+//     benchTicket(11, 10000, 5);
+//     benchTicket(12, 10000, 5);
+// }
 
 // gcc -fopenmp ticket_BM.c benchUtils.c -o ticket_BM
