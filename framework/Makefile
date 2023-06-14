@@ -1,6 +1,6 @@
 CC = gcc
-CFLAGS =  -fopenmp
-LDFLAGS = -shared -fopenmp
+CFLAGS =  -fopenmp -fPIC
+LDFLAGS = -shared -fopenmp -fPIC
 
 SRCDIR = src
 INCDIR = include
