@@ -2,6 +2,13 @@ import ctypes
 import os
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+
+def plotStuff(x, y, lock, df, color):
+    stdd = "stdd"
+    mean = "mean"
+    plt.plot(df[x], df[mean+y], label = lock, color = color)
+    plt.errorbar(df[x], df[mean+y], df[stdd + y], linestyle='None', fmt='o', capsize=3, color = color)
 
 class benchData(ctypes.Structure):
     '''
@@ -45,3 +52,4 @@ def dataframeBuilder(benchmarkList):
 
     df = pd.DataFrame(data, columns=columnNames)
     return df
+
