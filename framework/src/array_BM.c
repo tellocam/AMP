@@ -75,9 +75,6 @@ static void threadBench(Array_lock_t* lock, threadBenchData* threadData,
     
 }
 
-int mySlot;
-#pragma omp threadprivate(mySlot)
-
 benchData benchArray(int threads, int times, int sleepCycles) {
 
     benchData result;
@@ -90,6 +87,9 @@ benchData benchArray(int threads, int times, int sleepCycles) {
 
     Array_lock_t lock;
     lock_init(&lock);
+
+    static int mySlot;
+    #pragma omp threadprivate(mySlot)
 
     omp_set_dynamic(0); 
 
