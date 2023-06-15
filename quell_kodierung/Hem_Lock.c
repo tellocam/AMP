@@ -13,54 +13,28 @@ struct Node{
 
 struct Lock{
    _Atomic (struct Node*) tail;
-//    _Atomic (struct Node*) node;
    char padding[64];  // avoiding false sharing with the head
 };
 
 __thread struct Node tnode = {(_Atomic (struct Lock*)) NULL};
 
-// void lock_init(struct Lock* hem_lock){
-//     hem_lock->tail = (struct Node*) NULL;
-//     // atomic_store_explicit(&hem_lock->tail, (_Atomic (struct Node*)) NULL, memory_order_relaxed);
-//     hem_lock->node = (struct Node*) NULL;
-// }
+
 
 void lock_init(struct Lock* hem_lock){
-    // hem_lock->tail = (struct Node*) NULL;
     atomic_store_explicit(&hem_lock->tail, (_Atomic (struct Node*)) NULL, memory_order_relaxed);
-    // hem_lock->node = (struct Node*) NULL;
 }
 
-
-// void lock_acquire(struct Lock* hem_lock){
-//     struct Node* n = (struct Node*)malloc(sizeof(struct Node));
-//     n->grant = (struct Lock*)NULL;
-    
-//     // Enqueue n at tail of implicit queue
-//     struct Node* pred = (struct Node*) atomic_exchange(&hem_lock->tail, n);
-
-//     if (pred != (struct Node*)NULL) {
-//         // Wait until the current node's grant field is set to NULL
-//         while (atomic_load(&n->grant) != (struct Lock*)NULL){};
-//         atomic_store_explicit(&pred->grant, (struct Lock*)NULL, memory_order_relaxed);
-//     }
-//     hem_lock->node = n;
-// }
 
 void lock_acquire(struct Lock* hem_lock){
     struct Node* n = &tnode;
     n->grant = (struct Lock*)NULL;
-    // atomic_store_explicit(&n->grant, (struct Lock*) NULL, memory_order_relaxed);
     
     // Enqueue n at tail of implicit queue
     struct Node* pred = (struct Node*) atomic_exchange(&hem_lock->tail, (_Atomic (struct Node*)) n);
 
     if (pred != (struct Node*)NULL) {
         // Wait until the current node's grant field is set to NULL
-        // while (__sync_val_compare_and_swap(&pred->grant, hem_lock, (_Atomic (struct Lock*)) NULL) != (_Atomic (struct Lock*)) hem_lock){
-        while(atomic_load(&pred->grant) != hem_lock) {
-            
-        };
+        while(atomic_load(&pred->grant) != hem_lock) {};
         atomic_store_explicit(&pred->grant, (struct Lock*)NULL, memory_order_relaxed);
     }
 }
@@ -69,36 +43,16 @@ void lock_release(struct Lock* hem_lock)
 {
     struct Node* n = &tnode;
     n->grant = (struct Lock*)NULL;
-    // n->grant = (_Atomic (struct Lock*)) NULL;
-    // atomic_store(&n->grant, (struct Lock*) NULL);
 
     // CAS = compare + swap 
-    // struct Node* v = atomic_exchange(&hem_lock->tail, n);
     struct Node* v = __sync_val_compare_and_swap(&hem_lock->tail, (_Atomic struct Node*) n, (_Atomic struct Node*) NULL);
 
     if (v != n){
         // One or more waiters exist -- convey ownership to successor
         atomic_store_explicit(&n->grant, (_Atomic (struct Lock*)) hem_lock, memory_order_relaxed);
         while(atomic_load(&n->grant) != ( struct Lock*) NULL) {};
-        // while (n->grant != (struct Lock*) NULL) {};
     }
 }
-
-// void lock_release(struct Lock* hem_lock)
-// {
-//     struct Node* n = hem_lock->node;
-//     n->grant = (_Atomic (struct Lock*)) NULL;
-
-//     // CAS = compare + swap 
-//     struct Node* v = __sync_val_compare_and_swap(&hem_lock->tail, (_Atomic struct Node*) n, (_Atomic struct Node*) NULL);
-
-//     if (v != n){
-//         // One or more waiters exist -- convey ownership to successor
-//         n->grant = hem_lock;
-//         while (atomic_load(&n->grant) != (struct Lock*) NULL) {};
-//     }
-//     free(n);
-// }
 
 
 int main() {   
