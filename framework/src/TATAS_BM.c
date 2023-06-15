@@ -87,8 +87,9 @@ benchData benchTATAS(int threads, int times, int sleepCycles) {
     for (int i=0; i<threads; i++) {
         result.success += thread_data[i].success; // total success
         result.fail     += thread_data[i].fail; // total fails
-        result.wait += thread_data[i].wait/((float)times); // avg wait per thread
-        result.fairness_dev += 100 * (abs(thread_data[i].success - times/threads) / (float)times); //avg fairness deviation in %
+        // result.wait += 1/(double)threads * thread_data[i].wait/(double)thread_data[i].success; // avg wait per thread
+        result.wait += thread_data[i].wait/(double)times; // avg wait per thread
+        result.fairness_dev += 100 * (abs((double)thread_data[i].success - (double)times/(double)threads) / (double)times); //avg fairness deviation in %
     }
 
     result.throughput = result.success / result.time;
