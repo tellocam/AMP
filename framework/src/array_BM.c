@@ -36,11 +36,11 @@ static void lock_acquire(Array_lock_t* lock, threadBenchData* threadData, int* m
 
     *mySlot = atomic_fetch_add(&lock->tail,1)%n;
 
-    int threadTic = omp_get_wtime();
+    double threadTic = omp_get_wtime();
     while (!lock->flags[*mySlot]) {
         threadData[id].fail += 1;
     };
-    int threadToc = omp_get_wtime();
+    double threadToc = omp_get_wtime();
 
     threadData[id].wait += (threadToc - threadTic);
 
@@ -112,8 +112,10 @@ benchData benchArray(int threads, int times, int sleepCycles) {
     for (int i=0; i<threads; i++) {
         result.success += thread_data[i].success; // total success
         result.fail     += thread_data[i].fail; // total fails
-        result.wait += thread_data[i].wait/((float)times); // avg wait per thread
-        result.fairness_dev += 100 * (abs(thread_data[i].success - times/threads) / (float)times); //avg fairness deviation in %
+        result.wait += thread_data[i].wait/(double)times; // avg wait per thread
+        // printf("I wait for: %f\n", result.wait);
+    //        times, threads, result.time);
+        result.fairness_dev += 100 * (abs((double)thread_data[i].success - (double)times/(double)threads) / (double)times); //avg fairness deviation in %
     }
 
     result.throughput = result.success / result.time;
@@ -129,19 +131,19 @@ benchData benchArray(int threads, int times, int sleepCycles) {
     return result;
 }
 
-// int main() {
+int main() {
 
-//     benchArray(2, 10000, 1);
-//     benchArray(3, 10000, 1);
-//     benchArray(4, 10000, 1);
-//     benchArray(5, 10000, 1);
-//     benchArray(6, 10000, 1);
-//     benchArray(7, 10000, 1);
-//     benchArray(8, 10000, 1);
-//     benchArray(9, 10000, 1);
-//     benchArray(10, 10000, 1);
-//     benchArray(11, 10000, 1);
-//     benchArray(12, 10000, 1);
-// }
+    benchArray(2, 10000, 1);
+    benchArray(3, 10000, 1);
+    benchArray(4, 10000, 1);
+    benchArray(5, 10000, 1);
+    benchArray(6, 10000, 1);
+    benchArray(7, 10000, 1);
+    benchArray(8, 10000, 1);
+    benchArray(9, 10000, 1);
+    benchArray(10, 10000, 1);
+    benchArray(11, 10000, 1);
+    benchArray(12, 10000, 1);
+}
 
 // gcc -fopenmp array_BM.c benchUtils.c -o array_BM

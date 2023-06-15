@@ -10,17 +10,21 @@
 
 static void threadBench(omp_lock_t* OMP_lock, threadBenchData* threadData, int* successCheck, int times, int sleepCycles) {
     int id = omp_get_thread_num();
-    double threadTic = omp_get_wtime();
+    double threadTic = 0;
+    double threadToc = 0;
 
     while (*successCheck < times) {
+        threadTic = omp_get_wtime();
+        #pragma omp critical
 
-        #pragma omp critical 
         {
+            threadToc = omp_get_wtime();
+            threadData[id].wait += (threadToc - threadTic);
             (*successCheck)++; //critical Section
             threadData[id].success += 1;
         }
-        
         threadBedtime(sleepCycles); // Take a Nap
+        threadTic = omp_get_wtime();
     }
     
 }
@@ -56,13 +60,14 @@ benchData benchCriticalOMP(int threads, int times, int sleepCycles) {
     for (int i=0; i<threads; i++) {
         result.success += thread_data[i].success; // total success
         result.fail     += thread_data[i].fail; // total fails
-        result.wait += thread_data[i].wait/(float)times; // avg wait per thread
-        result.fairness_dev += 100 * (abs(thread_data[i].success - times/threads) / (float)times); //avg fairness deviation in %
+        // result.wait += 1/(double)threads * thread_data[i].wait/(double)thread_data[i].success; // avg wait per thread
+        result.wait += thread_data[i].wait/(double)times; // avg wait per thread
+        result.fairness_dev += 100 * (abs((double)thread_data[i].success - (double)times/(double)threads) / (double)times); //avg fairness deviation in %
     }
 
     result.throughput = result.success / result.time;
 
-    // printf("TAS Lock Summary: %d Lock acquisiton requests on %d threads took: %f\n",
+    // printf("OMP Critical Summary: %d Lock acquisiton requests on %d threads took: %f\n",
     //        times, threads, result.time);
     // printf("  with %d failAcq,  %d successAcq, %f %% fairness dev.,  %f  acq/s throughput\n",
     //     result.fail,

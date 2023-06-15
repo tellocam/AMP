@@ -8,7 +8,19 @@ def plotStuff(x, y, lock, df, color):
     stdd = "stdd"
     mean = "mean"
     plt.plot(df[x], df[mean+y], label = lock, color = color)
-    plt.errorbar(df[x], df[mean+y], df[stdd + y], linestyle='None', fmt='o', capsize=3, color = color)
+    # plt.errorbar(df[x], df[mean+y], df[stdd + y], linestyle='None', fmt='o', capsize=3, color = color)
+
+def plotStuffSemilogy(x, y, lock, df, color):
+    stdd = "stdd"
+    mean = "mean"
+    plt.semilogy(df[x], df[mean+y], label = lock, color = color)
+    # plt.errorbar(df[x], df[mean+y], df[stdd + y], linestyle='None', fmt='o', capsize=3, color = color)
+
+def plotStuffLoglog(x, y, lock, df, color):
+    stdd = "stdd"
+    mean = "mean"
+    plt.loglog(df[x], df[mean+y], label = lock, color = color)
+    # plt.errorbar(df[x], df[mean+y], df[stdd + y], linestyle='None', fmt='o', capsize=3, color = color)
 
 class benchData(ctypes.Structure):
     '''

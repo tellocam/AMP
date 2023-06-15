@@ -23,14 +23,14 @@ static void lock_acquire(ticket_lock_t* lock, int *served, threadBenchData* thre
     int id = omp_get_thread_num();
 
     int next = atomic_fetch_add_explicit(&lock->ticket,1, 0);
-    int threadTic = omp_get_wtime();
+    double threadTic = omp_get_wtime();
     
     while (*served < next) {
         // Thread within spin!
         threadData[id].fail += 1;
     };
 
-    int threadToc = omp_get_wtime();
+    double threadToc = omp_get_wtime();
     threadData[id].wait += (threadToc - threadTic);
 }
 
@@ -91,13 +91,14 @@ benchData benchTicket(int threads, int times, int sleepCycles) {
     for (int i=0; i<threads; i++) {
         result.success += threadData[i].success; // total success
         result.fail     += threadData[i].fail; // total fails
-        result.wait += threadData[i].wait/((float)times); // avg wait per thread
-        result.fairness_dev += 100 * (abs(threadData[i].success - times/threads) / (float)times); //avg fairness deviation in %
+        // result.wait += 1/(double)threads * threadData[i].wait/(double)threadData[i].success; // avg wait per thread
+        result.wait += threadData[i].wait/(double)times; // avg wait per thread
+        result.fairness_dev += 100 * (abs((double)threadData[i].success - (double)times/(double)threads) / (double)times); //avg fairness deviation in %
     }
 
     result.throughput = result.success / result.time;
 
-    // printf("TAS Lock Summary: %d Lock acquisiton requests on %d threads took: %f\n",
+    // printf("Ticket Lock Summary: %d Lock acquisiton requests on %d threads took: %f\n",
     //        times, threads, result.time);
     // printf("  with %d failAcq,  %d successAcq, %f %% fairness dev.,  %f  acq/s throughput\n",
     //     result.fail,
