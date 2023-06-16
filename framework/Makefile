@@ -6,11 +6,6 @@ SRCDIR = src
 INCDIR = include
 BUILDDIR = build
 
-# THR = 12
-# ACQ = 1000
-# ITER = 100
-# SC = 1
-
 SRCS = $(wildcard $(SRCDIR)/*.c)
 OBJS = $(patsubst $(SRCDIR)/%.c,$(BUILDDIR)/%.o,$(SRCS))
 TARGET = $(BUILDDIR)/sharedLibrary.so
@@ -26,31 +21,43 @@ $(BUILDDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) -I$(INCDIR) -c -o $@ $<
 
 clean:
-	rm -f $(OBJS) $(TARGET)
+	@rm -f $(OBJS) $(TARGET)
 
 BenchLockOMP:
-	python3 benchnebula.py $(THR) $(ACQ) $(ITER) $(SC) LockOMP
+	@python3 benchnebula.py $(THR) $(ACQ) $(ITER) $(SC) LockOMP
 
 BenchCriticalOMP:
-	python3 benchnebula.py $(THR) $(ACQ) $(ITER) $(SC) CriticalOMP
+	@python3 benchnebula.py $(THR) $(ACQ) $(ITER) $(SC) CriticalOMP
 
 BenchTAS:
-	python3 benchnebula.py $(THR) $(ACQ) $(ITER) $(SC) benchTAS
+	@python3 benchnebula.py $(THR) $(ACQ) $(ITER) $(SC) benchTAS
 
 BenchTATAS:
-	python3 benchnebula.py $(THR) $(ACQ) $(ITER) $(SC) TATAS
+	@python3 benchnebula.py $(THR) $(ACQ) $(ITER) $(SC) TATAS
 
 BenchTicket:
-	python3 benchnebula.py $(THR) $(ACQ) $(ITER) $(SC) Ticket
+	@python3 benchnebula.py $(THR) $(ACQ) $(ITER) $(SC) Ticket
 
 BenchArray:
-	python3 benchnebula.py $(THR) $(ACQ) $(ITER) $(SC) Array
+	@python3 benchnebula.py $(THR) $(ACQ) $(ITER) $(SC) Array
 
 BenchMCS:
-	python3 benchnebula.py $(THR) $(ACQ) $(ITER) $(SC) MCS
+	@python3 benchnebula.py $(THR) $(ACQ) $(ITER) $(SC) MCS
 
 BenchCLH:
-	python3 benchnebula.py $(THR) $(ACQ) $(ITER) $(SC) CLH
+	@python3 benchnebula.py $(THR) $(ACQ) $(ITER) $(SC) CLH
 
 BenchHemlock:
-	python3 benchnebula.py $(THR) $(ACQ) $(ITER) $(SC) Hemlock
+	@python3 benchnebula.py $(THR) $(ACQ) $(ITER) $(SC) Hemlock
+
+createVenv:
+	@echo -e "\nCreate python virtual environment...\n"
+	@python3 -m venv myenv
+	
+	@echo -e "Activate python virtual environment...\n"
+	. myenv/bin/activate
+	
+	@echo -e "Upgrade pip and install numpy and matplotlib and pandas...\n"
+	
+	@pip install --upgrade pip
+	@pip install numpy matplotlib pandas
