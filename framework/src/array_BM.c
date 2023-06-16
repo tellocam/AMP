@@ -133,17 +133,18 @@ benchData benchArray(int threads, int times, int sleepCycles) {
 
 // int main() {
 
-//     benchArray(2, 10000, 1);
-//     benchArray(3, 10000, 1);
-//     benchArray(4, 10000, 1);
-//     benchArray(5, 10000, 1);
-//     benchArray(6, 10000, 1);
-//     benchArray(7, 10000, 1);
-//     benchArray(8, 10000, 1);
-//     benchArray(9, 10000, 1);
-//     benchArray(10, 10000, 1);
-//     benchArray(11, 10000, 1);
-//     benchArray(12, 10000, 1);
+//     benchArray(2, 1000, 1);
+//     benchArray(3, 1000, 1);
+//     benchArray(4, 1000, 1);
+//     benchArray(5, 1000, 1);
+//     benchArray(6, 1000, 1);
+//     benchArray(7, 1000, 1);
+//     benchArray(8, 1000, 1);
+//     benchArray(9, 1000, 1);
+//     benchArray(10, 1000, 1);
+//     benchArray(11, 1000, 1);
+//     benchArray(12, 1000, 1);
+
 // }
 
 // gcc -fopenmp array_BM.c benchUtils.c -o array_BM

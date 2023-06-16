@@ -3,7 +3,6 @@ import os
 import sys
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import utils
 
 # Check if the argument count is correct
@@ -39,6 +38,8 @@ print("Starting Benchmark of " + lockName + "Lock")
 
 threadNum = [i for i in range(2, maxThreads+1)]
 bmListLock = {threads: [LockC(threads, maxAcq, sleepCyles) for _ in range(maxIter)] for threads in threadNum}
+print("Finish Data Acquisition")
 df = utils.dataframeBuilder(bmListLock).fillna(0)
-df.to_csv(lockName+ "_THR" + str(maxThreads) +"_ACQ" + str(maxAcq) + "_ITER" + str(maxIter) + '_Nebula.txt', index=False, sep='\t')
+print("Finish DataframeBuilder() call")
+df.to_csv("data/"+lockName+ "_THR" + str(maxThreads) +"_ACQ" + str(maxAcq) + "_ITER" + str(maxIter) + '_Nebula.txt', index=False, sep='\t')
 print(df)
