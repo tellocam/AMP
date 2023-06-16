@@ -33,13 +33,12 @@ print("The matching lock name is:", lockName)
 
 # Load the shared library function
 LockC = getattr(binary, lockName)
-
 LockC.restype = utils.benchData
 
 print("Starting Benchmark of " + lockName + "Lock")
 
-
 threadNum = [i for i in range(2, maxThreads+1)]
 bmListLock = {threads: [LockC(threads, maxAcq, sleepCyles) for _ in range(maxIter)] for threads in threadNum}
 df = utils.dataframeBuilder(bmListLock).fillna(0)
+df.to_csv(lockName+ "_THR" + str(maxThreads) +"_ACQ" + str(maxAcq) + "_ITER" + str(maxIter) + '_Nebula.txt', index=False, sep='\t')
 print(df)
