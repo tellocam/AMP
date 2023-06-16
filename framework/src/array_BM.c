@@ -120,31 +120,31 @@ benchData benchArray(int threads, int times, int sleepCycles) {
 
     result.throughput = result.success / result.time;
 
-    // printf("Array Lock Summary: %d Lock acquisiton requests on %d threads took: %f\n",
-    //        times, threads, result.time);
-    // printf("  with %d failAcq,  %d successAcq, %f %% fairness dev.,  %f  acq/s throughput\n",
-    //     result.fail,
-    //     result.success,
-    //     result.fairness_dev,
-    //     result.throughput);
+    printf("Array Lock Summary: %d Lock acquisiton requests on %d threads took: %f\n",
+           times, threads, result.time);
+    printf("  with %d failAcq,  %d successAcq, %f %% fairness dev.,  %f  acq/s throughput\n",
+        result.fail,
+        result.success,
+        result.fairness_dev,
+        result.throughput);
 
     return result;
 }
 
-// int main() {
+int main() {
 
-//     benchArray(2, 1000, 1);
-//     benchArray(3, 1000, 1);
-//     benchArray(4, 1000, 1);
-//     benchArray(5, 1000, 1);
-//     benchArray(6, 1000, 1);
-//     benchArray(7, 1000, 1);
-//     benchArray(8, 1000, 1);
-//     benchArray(9, 1000, 1);
-//     benchArray(10, 1000, 1);
-//     benchArray(11, 1000, 1);
-//     benchArray(12, 1000, 1);
+    benchArray(2, 1000, 1);
+    benchArray(3, 1000, 1);
+    benchArray(4, 1000, 1);
+    benchArray(5, 1000, 1);
+    benchArray(6, 1000, 1);
+    benchArray(7, 1000, 1);
+    benchArray(8, 1000, 1);
+    benchArray(9, 1000, 1);
+    benchArray(10, 1000, 1);
+    benchArray(11, 1000, 1);
+    benchArray(12, 1000, 1);
 
-// }
+}
 
 // gcc -fopenmp array_BM.c benchUtils.c -o array_BM
