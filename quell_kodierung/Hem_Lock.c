@@ -18,8 +18,6 @@ struct Lock{
 
 __thread struct Node tnode = {(_Atomic (struct Lock*)) NULL};
 
-
-
 void lock_init(struct Lock* hem_lock){
     atomic_store_explicit(&hem_lock->tail, (_Atomic (struct Node*)) NULL, memory_order_relaxed);
 }
