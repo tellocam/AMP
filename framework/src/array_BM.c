@@ -144,7 +144,7 @@ benchData benchArray(int threads, int times, int sleepCycles) {
     return result;
 }
 
-// int main() {
+int main() {
 
 //     benchArray(2, 10000, 1);
 //     benchArray(3, 10000, 1);
@@ -278,6 +278,6 @@ benchData benchArray(int threads, int times, int sleepCycles) {
 //     benchArray(11, 10000, 1);
 //     benchArray(12, 10000, 1);
 
-// }
+}
 
 // gcc -fopenmp array_BM.c benchUtils.c -o array_BM
