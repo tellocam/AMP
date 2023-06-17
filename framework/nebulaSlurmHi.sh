@@ -9,8 +9,8 @@
 
 thr=64
 acq=1000
-iter=1000
-sc=1 
+iter=100
+sc=1
 
 make all
 make createVenv

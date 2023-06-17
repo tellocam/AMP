@@ -67,13 +67,12 @@ benchData benchTATAS(int threads, int times, int sleepCycles) {
     TATAS_lock_t TATAS_lock;
     lock_init(&TATAS_lock);
 
-    omp_set_dynamic(0); 
-    omp_set_num_threads(threads);
-
     double tic, toc;
     tic = omp_get_wtime();
 
         #pragma omp parallel
+        omp_set_dynamic(0); 
+        omp_set_num_threads(threads);
         {
             #pragma omp parallel for
             for (int i=0; i<threads; i++) {

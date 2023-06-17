@@ -24,7 +24,6 @@ void lock_init(struct Hemlock* hem_lock){
     atomic_store_explicit(&hem_lock->tail, (_Atomic (struct Hemlock_Node*)) NULL, memory_order_relaxed);
 }
 
-
 void lock_acquire(struct Hemlock* hem_lock, threadBenchData* threadData){
     int id = omp_get_thread_num();
     struct Hemlock_Node* n = &tnode;
@@ -92,17 +91,18 @@ benchData benchHemlock(int threads, int times, int sleepCycles) {
     lock = (struct Hemlock*)malloc(sizeof(struct Hemlock));
     lock_init(lock);
 
-    omp_set_dynamic(0); 
-    omp_set_num_threads(threads);
-
     double tic, toc;
     tic = omp_get_wtime();
 
         #pragma omp parallel
+        omp_set_dynamic(0); 
+        omp_set_num_threads(threads);
         {
-            #pragma omp parallel for
+            printf("threadnum is %d \n", omp_get_num_threads());
+            #pragma omp parallel for          
             for (int i=0; i<threads; i++) {
-                
+                omp_set_num_threads(threads);
+                printf("threadnum is %d \n", omp_get_thread_num());
                 threadBench(lock, &threadData[0], &successCheck, times, sleepCycles);
             }
         }
@@ -136,9 +136,9 @@ benchData benchHemlock(int threads, int times, int sleepCycles) {
 
 // int main() {
 
-//     // benchHemlock(2, 10000, 5);
+//     benchHemlock(2, 10000, 5);
 //     benchHemlock(3, 10000, 5);
-//     // benchHemlock(4, 10000, 5);
+//     benchHemlock(4, 10000, 5);
 //     benchHemlock(5, 10000, 1);
 //     benchHemlock(6, 10000, 1);
 //     benchHemlock(7, 10000, 1);
