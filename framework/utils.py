@@ -65,3 +65,35 @@ def dataframeBuilder(benchmarkList):
     df = pd.DataFrame(data, columns=columnNames)
     return df
 
+def dataframeBuilderCycles(benchmarkList):
+    columnNames = ["cycles", "meanTime", "stddTime",
+                    "meanFail", "stddFail", "meanWait", "stddWait",
+                    "meanFair", "stddFair", "meanTP", "stddTP"]
+
+    # create empty list to store computed values
+    data = []
+
+    # iterate more or less smartly over benchmarkList
+    for cycles, results in benchmarkList.items():
+
+        times = np.array([result.time for result in results])
+        fails = np.array([result.fail for result in results])
+        waits = np.array([result.wait for result in results])
+        fairness = np.array([result.fairness_dev for result in results])
+        throughput = np.array([result.throughput for result in results])
+
+        meanTime, stddTime = np.mean(times), np.std(times)
+        meanFail, stddFail = np.mean(fails), np.std(fails)
+        meanWait, stddWait = np.mean(waits), np.std(waits)
+        meanFair, stddFair = np.mean(fairness), np.std(fairness)
+        meanTP, stddTP = np.mean(throughput), np.std(throughput)
+
+        data.append([
+            cycles, meanTime, stddTime,
+            meanFail, stddFail, meanWait, stddWait,
+            meanFair, stddFair, meanTP, stddTP
+        ])
+
+    df = pd.DataFrame(data, columns=columnNames)
+    return df
+

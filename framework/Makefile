@@ -50,6 +50,35 @@ BenchCLH:
 BenchHemlock:
 	@python3 benchnebula.py $(THR) $(ACQ) $(ITER) $(SC) Hemlock
 
+# Here are the contention benchmarks
+
+ContBenchLockOMP:
+	@python3 benchContention.py $(THR) $(ACQ) $(ITER) $(SC) LockOMP
+
+ContBenchCriticalOMP:
+	@python3 benchContention.py $(THR) $(ACQ) $(ITER) $(SC) CriticalOMP
+
+ContBenchTAS:
+	@python3 benchContention.py $(THR) $(ACQ) $(ITER) $(SC) benchTAS
+
+ContBenchTATAS:
+	@python3 benchContention.py $(THR) $(ACQ) $(ITER) $(SC) TATAS
+
+ContBenchTicket:
+	@python3 benchContention.py $(THR) $(ACQ) $(ITER) $(SC) Ticket
+
+ContBenchArray:
+	@python3 benchContention.py $(THR) $(ACQ) $(ITER) $(SC) Array
+
+ContBenchMCS:
+	@python3 benchContention.py $(THR) $(ACQ) $(ITER) $(SC) MCS
+
+ContBenchCLH:
+	@python3 benchContention.py $(THR) $(ACQ) $(ITER) $(SC) CLH
+
+ContBenchHemlock:
+	@python3 benchContention.py $(THR) $(ACQ) $(ITER) $(SC) Hemlock
+
 createVenv:
 	@echo -e "\nCreate python virtual environment...\n"
 	@python3 -m venv myenv
