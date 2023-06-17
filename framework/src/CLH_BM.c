@@ -85,11 +85,13 @@ benchData benchCLH(int threads, int times, int sleepCycles) {
     struct CLH_Lock_t lock;
     lock_init(&lock);
 
+    omp_set_dynamic(0); 
+    omp_set_num_threads(threads);
+
     double tic, toc;
     tic = omp_get_wtime();
 
         #pragma omp parallel
-        omp_set_num_threads(threads); 
         {
             #pragma omp parallel for
             for (int i=0; i<threads; i++) {

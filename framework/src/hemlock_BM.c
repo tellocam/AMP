@@ -92,15 +92,19 @@ benchData benchHemlock(int threads, int times, int sleepCycles) {
     lock = (struct Hemlock*)malloc(sizeof(struct Hemlock));
     lock_init(lock);
 
+    omp_set_dynamic(0); 
+    omp_set_num_threads(threads);
 
     double tic, toc;
     tic = omp_get_wtime();
-        // omp_set_dynamic(0);
-        omp_set_num_threads(threads);
-        #pragma omp parallel for schedule(dynamic, 1)
-        for (int i=0; i<threads; i++) {
-            // &threadData[0] is pointer to first entry of threadData array, later used with pointer arithmetic
-            threadBench(lock, &threadData[0], &successCheck, times, sleepCycles);
+
+        #pragma omp parallel
+        {
+            #pragma omp parallel for
+            for (int i=0; i<threads; i++) {
+                
+                threadBench(lock, &threadData[0], &successCheck, times, sleepCycles);
+            }
         }
 
 

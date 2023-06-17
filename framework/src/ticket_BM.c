@@ -71,12 +71,13 @@ benchData benchTicket(int threads, int times, int sleepCycles) {
     lock_init(&lock);
     int served = 0;
 
+    omp_set_dynamic(0); 
+    omp_set_num_threads(threads);
 
     double tic, toc;
     tic = omp_get_wtime();
 
         #pragma omp parallel
-        omp_set_num_threads(threads); 
         {
             #pragma omp parallel for
             for (int i=0; i<threads; i++) {

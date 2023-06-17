@@ -109,12 +109,13 @@ benchData benchMCS(int threads, int times, int sleepCycles) {
     lock = (struct MCS_Lock_t*)malloc(sizeof(struct MCS_Lock_t));
     lock_init(lock);
 
-    double tic, toc;
+    omp_set_dynamic(0); 
+    omp_set_num_threads(threads);
+    
+        double tic, toc;
     tic = omp_get_wtime();
 
         #pragma omp parallel
-        omp_set_num_threads(threads); 
-        omp_set_dynamic(0);
         {
             #pragma omp parallel for
             for (int i=0; i<threads; i++) {

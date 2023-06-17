@@ -42,17 +42,20 @@ benchData benchCriticalOMP(int threads, int times, int sleepCycles) {
     omp_lock_t OMP_lock;
     omp_init_lock(&OMP_lock);
 
+    omp_set_dynamic(0); 
+    omp_set_num_threads(threads);
+
     double tic, toc;
-
-    #pragma omp parallel
-    omp_set_num_threads(threads); 
-
     tic = omp_get_wtime();
-        #pragma omp parallel for
-        for (int i=0; i<threads; i++) {
-            // &thread_data[0] is pointer to first entry of thread_data array, later used with pointer arithmetic
-            threadBench(&OMP_lock, &thread_data[0], &successCheck, times, sleepCycles); 
-        }   
+
+        #pragma omp parallel
+        {
+            #pragma omp parallel for
+            for (int i=0; i<threads; i++) {
+                // &thread_data[0] is pointer to first entry of thread_data array, later used with pointer arithmetic
+                threadBench(&OMP_lock, &thread_data[0], &successCheck, times, sleepCycles); 
+            }   
+        }
 
     toc = omp_get_wtime();
     result.time = (toc - tic);
