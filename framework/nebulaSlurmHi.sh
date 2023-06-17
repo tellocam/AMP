@@ -9,15 +9,15 @@
 
 thr=64
 acq=1000
-iter=100
+iter=250
 sc=1
 
 make all
 make createVenv
 
-# make BenchLockOMP THR=$thr ACQ=$acq ITER=$iter SC=$sc
-# make BenchCriticalOMP THR=$thr ACQ=$acq ITER=$iter SC=$sc
-# make BenchTAS THR=$thr ACQ=$acq ITER=$iter SC=$sc
+make BenchLockOMP THR=$thr ACQ=$acq ITER=$iter SC=$sc
+make BenchCriticalOMP THR=$thr ACQ=$acq ITER=$iter SC=$sc
+make BenchTAS THR=$thr ACQ=$acq ITER=$iter SC=$sc
 # make BenchTATAS THR=$thr ACQ=$acq ITER=$iter SC=$sc
 # make BenchTicket THR=$thr ACQ=$acq ITER=$iter SC=$sc
 # make BenchArray THR=$thr ACQ=$acq ITER=$iter SC=$sc

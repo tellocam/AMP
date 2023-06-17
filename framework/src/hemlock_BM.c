@@ -98,11 +98,9 @@ benchData benchHemlock(int threads, int times, int sleepCycles) {
         omp_set_dynamic(0); 
         omp_set_num_threads(threads);
         {
-            printf("threadnum is %d \n", omp_get_num_threads());
             #pragma omp parallel for          
             for (int i=0; i<threads; i++) {
                 omp_set_num_threads(threads);
-                printf("threadnum is %d \n", omp_get_thread_num());
                 threadBench(lock, &threadData[0], &successCheck, times, sleepCycles);
             }
         }

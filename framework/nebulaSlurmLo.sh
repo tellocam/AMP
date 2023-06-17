@@ -5,7 +5,7 @@
 #SBATCH -c 64
 #SBATCH --cpu-freq=High
 #SBATCH --time=5:00
-#SBATCH --output=runHiCont.out
+#SBATCH --output=runLoCont.out
 
 thr=64
 acq=1000

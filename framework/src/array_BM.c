@@ -36,8 +36,6 @@ static void lock_acquire(Array_lock_t* lock, threadBenchData* threadData, int* m
         threadData[id].fail += 1;
     };
 
-    printf("thread %d of %d has acquired lock \n", id, n);
-
     double threadToc = omp_get_wtime();
     threadData[id].wait += (threadToc - threadTic);
 
@@ -129,20 +127,20 @@ benchData benchArray(int threads, int times, int sleepCycles) {
     return result;
 }
 
-int main() {
+// int main() {
 
-    benchArray(4, 16, 1);
-    // benchArray(3, 10000, 1);
-    // benchArray(4, 10000, 1);
-    // benchArray(5, 10000, 1);
-    // benchArray(6, 10000, 1);
-    // benchArray(7, 10000, 1);
-    // benchArray(8, 10000, 1);
-    // benchArray(9, 10000, 1);
-    // benchArray(10, 10000, 1);
-    // benchArray(11, 10000, 1);
-    // benchArray(12, 10000, 1);
+//     benchArray(4, 16, 1);
+//     benchArray(3, 10000, 1);
+//     benchArray(4, 10000, 1);
+//     benchArray(5, 10000, 1);
+//     benchArray(6, 10000, 1);
+//     benchArray(7, 10000, 1);
+//     benchArray(8, 10000, 1);
+//     benchArray(9, 10000, 1);
+//     benchArray(10, 10000, 1);
+//     benchArray(11, 10000, 1);
+//     benchArray(12, 10000, 1);
 
-}
+// }
 
 // gcc -fopenmp array_BM.c benchUtils.c -o array_BM
