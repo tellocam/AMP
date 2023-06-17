@@ -18,9 +18,9 @@ typedef struct Array_lock_t{
     _Atomic int tail;
 } Array_lock_t;
 
-static void lock_init(Array_lock_t* lock) {
+static void lock_init(Array_lock_t* lock, int N) {
     // allocate memory for flags
-    int N = omp_get_num_threads();
+    // int N = omp_get_num_threads();
     lock->flags = malloc(N*sizeof(bool));
     lock->flags[0] = true;
     for (int i=1; i < N; i++){
@@ -33,11 +33,14 @@ static void lock_acquire(Array_lock_t* lock, threadBenchData* threadData, int* m
 
     int id = omp_get_thread_num();
     int n = omp_get_num_threads();
+    
 
     *mySlot = atomic_fetch_add(&lock->tail,1)%n;
 
+    // printf("print *myslot %d and n %d\n", *mySlot, n );
+
     double threadTic = omp_get_wtime();
-    while (!lock->flags[*mySlot]) {
+    while (!atomic_load(&lock->flags[*mySlot])) {
         threadData[id].fail += 1;
     };
     double threadToc = omp_get_wtime();
@@ -48,10 +51,10 @@ static void lock_acquire(Array_lock_t* lock, threadBenchData* threadData, int* m
 
 static void lock_release(Array_lock_t* lock, int* mySlot) {
 
-    int N = omp_get_num_threads();
+    int n = omp_get_num_threads();
 
-    lock->flags[*mySlot] = false;
-    lock->flags[(*mySlot + 1) % N] = true;
+    atomic_store(&lock->flags[*mySlot], false);
+    atomic_store(&lock->flags[(*mySlot + 1) % n], true);
 }
 
 static void threadBench(Array_lock_t* lock, threadBenchData* threadData,
@@ -86,26 +89,35 @@ benchData benchArray(int threads, int times, int sleepCycles) {
     int successCheck = 0;
 
     Array_lock_t lock;
-    lock_init(&lock);
+    lock_init(&lock, threads);
 
-    static int mySlot;
-    #pragma omp threadprivate(mySlot)
+    // static int mySlot;
+    // #pragma omp threadprivate(mySlot)
 
     omp_set_dynamic(0); 
-
+    omp_set_num_threads(threads);
+    
     double tic, toc;
     tic = omp_get_wtime();
 
         #pragma omp parallel
-        omp_set_num_threads(threads); 
+        // omp_set_num_threads(threads); 
+        printf("print threadnum %d \n", omp_get_num_threads());
         {
+            static int mySlot;
+            #pragma omp threadprivate(mySlot)
+            
             #pragma omp parallel for
+
+            
+            
             for (int i=0; i<threads; i++) {
                 // &thread_data[0] is pointer to first entry of thread_data array, later used with pointer arithmetic
                 threadBench(&lock, &thread_data[0], &successCheck, times, sleepCycles, &mySlot); 
-            }   
+            }
+            
         }
-
+        
     toc = omp_get_wtime();
     result.time = (toc - tic);
 
@@ -120,30 +132,151 @@ benchData benchArray(int threads, int times, int sleepCycles) {
 
     result.throughput = result.success / result.time;
 
-    // printf("Array Lock Summary: %d Lock acquisiton requests on %d threads took: %f\n",
-    //        times, threads, result.time);
+    printf("Array Lock Summary: %d Lock acquisiton requests on %d threads took: %f\n",
+           times, threads, result.time);
     // printf("  with %d failAcq,  %d successAcq, %f %% fairness dev.,  %f  acq/s throughput\n",
     //     result.fail,
     //     result.success,
     //     result.fairness_dev,
     //     result.throughput);
-
+    free(lock.flags);
+    
     return result;
 }
 
 // int main() {
 
-//     benchArray(2, 1000, 1);
-//     benchArray(3, 1000, 1);
-//     benchArray(4, 1000, 1);
-//     benchArray(5, 1000, 1);
-//     benchArray(6, 1000, 1);
-//     benchArray(7, 1000, 1);
-//     benchArray(8, 1000, 1);
-//     benchArray(9, 1000, 1);
-//     benchArray(10, 1000, 1);
-//     benchArray(11, 1000, 1);
-//     benchArray(12, 1000, 1);
+//     benchArray(2, 10000, 1);
+//     benchArray(3, 10000, 1);
+//     benchArray(4, 10000, 1);
+//     benchArray(5, 10000, 1);
+//     benchArray(6, 10000, 1);
+//     benchArray(7, 10000, 1);
+//     benchArray(8, 10000, 1);
+//     benchArray(9, 10000, 1);
+//     benchArray(10, 10000, 1);
+//     benchArray(11, 10000, 1);
+//     benchArray(12, 10000, 1);
+
+//         benchArray(2, 10000, 1);
+//     benchArray(3, 10000, 1);
+//     benchArray(4, 10000, 1);
+//     benchArray(5, 10000, 1);
+//     benchArray(6, 10000, 1);
+//     benchArray(7, 10000, 1);
+//     benchArray(8, 10000, 1);
+//     benchArray(9, 10000, 1);
+//     benchArray(10, 10000, 1);
+//     benchArray(11, 10000, 1);
+//     benchArray(12, 10000, 1);
+
+//         benchArray(2, 10000, 1);
+//     benchArray(3, 10000, 1);
+//     benchArray(4, 10000, 1);
+//     benchArray(5, 10000, 1);
+//     benchArray(6, 10000, 1);
+//     benchArray(7, 10000, 1);
+//     benchArray(8, 10000, 1);
+//     benchArray(9, 10000, 1);
+//     benchArray(10, 10000, 1);
+//     benchArray(11, 10000, 1);
+//     benchArray(12, 10000, 1);
+
+//         benchArray(2, 10000, 1);
+//     benchArray(3, 10000, 1);
+//     benchArray(4, 10000, 1);
+//     benchArray(5, 10000, 1);
+//     benchArray(6, 10000, 1);
+//     benchArray(7, 10000, 1);
+//     benchArray(8, 10000, 1);
+//     benchArray(9, 10000, 1);
+//     benchArray(10, 10000, 1);
+//     benchArray(11, 10000, 1);
+//     benchArray(12, 10000, 1);
+
+//         benchArray(2, 10000, 1);
+//     benchArray(3, 10000, 1);
+//     benchArray(4, 10000, 1);
+//     benchArray(5, 10000, 1);
+//     benchArray(6, 10000, 1);
+//     benchArray(7, 10000, 1);
+//     benchArray(8, 10000, 1);
+//     benchArray(9, 10000, 1);
+//     benchArray(10, 10000, 1);
+//     benchArray(11, 10000, 1);
+//     benchArray(12, 10000, 1);
+
+//         benchArray(2, 10000, 1);
+//     benchArray(3, 10000, 1);
+//     benchArray(4, 10000, 1);
+//     benchArray(5, 10000, 1);
+//     benchArray(6, 10000, 1);
+//     benchArray(7, 10000, 1);
+//     benchArray(8, 10000, 1);
+//     benchArray(9, 10000, 1);
+//     benchArray(10, 10000, 1);
+//     benchArray(11, 10000, 1);
+//     benchArray(12, 10000, 1);
+
+//         benchArray(2, 10000, 1);
+//     benchArray(3, 10000, 1);
+//     benchArray(4, 10000, 1);
+//     benchArray(5, 10000, 1);
+//     benchArray(6, 10000, 1);
+//     benchArray(7, 10000, 1);
+//     benchArray(8, 10000, 1);
+//     benchArray(9, 10000, 1);
+//     benchArray(10, 10000, 1);
+//     benchArray(11, 10000, 1);
+//     benchArray(12, 10000, 1);
+
+//         benchArray(2, 10000, 1);
+//     benchArray(3, 10000, 1);
+//     benchArray(4, 10000, 1);
+//     benchArray(5, 10000, 1);
+//     benchArray(6, 10000, 1);
+//     benchArray(7, 10000, 1);
+//     benchArray(8, 10000, 1);
+//     benchArray(9, 10000, 1);
+//     benchArray(10, 10000, 1);
+//     benchArray(11, 10000, 1);
+//     benchArray(12, 10000, 1);
+
+//         benchArray(2, 10000, 1);
+//     benchArray(3, 10000, 1);
+//     benchArray(4, 10000, 1);
+//     benchArray(5, 10000, 1);
+//     benchArray(6, 10000, 1);
+//     benchArray(7, 10000, 1);
+//     benchArray(8, 10000, 1);
+//     benchArray(9, 10000, 1);
+//     benchArray(10, 10000, 1);
+//     benchArray(11, 10000, 1);
+//     benchArray(12, 10000, 1);
+
+//         benchArray(2, 10000, 1);
+//     benchArray(3, 10000, 1);
+//     benchArray(4, 10000, 1);
+//     benchArray(5, 10000, 1);
+//     benchArray(6, 10000, 1);
+//     benchArray(7, 10000, 1);
+//     benchArray(8, 10000, 1);
+//     benchArray(9, 10000, 1);
+//     benchArray(10, 10000, 1);
+//     benchArray(11, 10000, 1);
+//     benchArray(12, 10000, 1);
+
+//         benchArray(2, 10000, 1);
+//     benchArray(3, 10000, 1);
+//     benchArray(4, 10000, 1);
+//     benchArray(5, 10000, 1);
+//     benchArray(6, 10000, 1);
+//     benchArray(7, 10000, 1);
+//     benchArray(8, 10000, 1);
+//     benchArray(9, 10000, 1);
+//     benchArray(10, 10000, 1);
+//     benchArray(11, 10000, 1);
+//     benchArray(12, 10000, 1);
 
 // }
 

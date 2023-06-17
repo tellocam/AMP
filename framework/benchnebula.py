@@ -34,7 +34,7 @@ print("The matching lock name is:", lockName)
 LockC = getattr(binary, lockName)
 LockC.restype = utils.benchData
 
-print("Starting Benchmark of " + lockName + "Lock")
+print("Starting Benchmark of " + lockName + " Lock")
 
 threadNum = [i for i in range(2, maxThreads+1)]
 bmListLock = {threads: [LockC(threads, maxAcq, sleepCyles) for _ in range(maxIter)] for threads in threadNum}

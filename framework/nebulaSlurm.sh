@@ -5,7 +5,7 @@
 #SBATCH -c 64   # use all 64 cores 
 #SBATCH --cpu-freq=High
 #SBATCH --time=5:00
-#SBATCH --output=run1_job.out
+#SBATCH --output=runArray.out
 
 thr=64
 acq=1000
@@ -13,13 +13,14 @@ iter=100
 sc=1
 
 make all
+make createVenv
 
-make BenchLockOMP THR=$thr ACQ=$acq ITER=$iter SC=$sc
-make BenchCriticalOMP THR=$thr ACQ=$acq ITER=$iter SC=$sc
-make BenchTAS THR=$thr ACQ=$acq ITER=$iter SC=$sc
+# make BenchLockOMP THR=$thr ACQ=$acq ITER=$iter SC=$sc
+# make BenchCriticalOMP THR=$thr ACQ=$acq ITER=$iter SC=$sc
+# make BenchTAS THR=$thr ACQ=$acq ITER=$iter SC=$sc
 # make BenchTATAS THR=$thr ACQ=$acq ITER=$iter SC=$sc
 # make BenchTicket THR=$thr ACQ=$acq ITER=$iter SC=$sc
-# make BenchArray THR=$thr ACQ=$acq ITER=$iter SC=$sc
+make BenchArray THR=$thr ACQ=$acq ITER=$iter SC=$sc
 # make BenchMCS THR=$thr ACQ=$acq ITER=$iter SC=$sc
 # make BenchCLH THR=$thr ACQ=$acq ITER=$iter SC=$sc
 # make BenchHemlock THR=$thr ACQ=$acq ITER=$iter SC=$sc
