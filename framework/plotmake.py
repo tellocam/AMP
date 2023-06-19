@@ -20,9 +20,9 @@ df_MCS = pd.read_csv("data/MCS.txt", sep='\t')
 df_Hemlock = pd.read_csv("data/Hemlock.txt", sep='\t')
 
 rcParams['figure.figsize'] = 10, 10
-plt.rc('text', usetex=True)
-plt.rcParams['text.usetex']=True
-plt.rc('font', family='sans-serif', weight='bold')
+# plt.rc('text', usetex=True)
+# plt.rcParams['text.usetex']=True
+# plt.rc('font', family='sans-serif', weight='bold')
 SMALL_SIZE = 10
 MEDIUM_SIZE = 15
 BIGGER_SIZE = 20
