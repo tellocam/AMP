@@ -103,7 +103,7 @@ make small-bench:
 	@myenv/bin/pip install numpy matplotlib pandas
 	@echo -e "Running benchmark python script...\n"
 	@. myenv/bin/activate
-	@srun benchmake.py
+	@srun benchmake.py 
 
 make small-plot:
 	@echo -e "\nCreate python virtual environment...\n"
