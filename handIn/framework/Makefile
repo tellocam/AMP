@@ -119,3 +119,4 @@ make small-plot:
 	@echo -e "Running plotting python script...\n"
 	@mkdir plots
 	@. myenv/bin/activate && python3 plotmake.py
+	@echo -e "Plot succesfully saved to /framework/plots/small-plot.pdf\n"
