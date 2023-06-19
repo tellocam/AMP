@@ -108,8 +108,6 @@ make small-bench:
 make small-plot:
 	@echo -e "\nCreate python virtual environment...\n"
 	@python3 -m venv myenv
-
-	srun --cpu-freq=High --time=5:00 -p q_student -N 1 -c 64 python3 benchmake.py 
 	
 	@echo -e "Activate python virtual environment...\n"
 	@. myenv/bin/activate
