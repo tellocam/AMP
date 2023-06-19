@@ -14,6 +14,8 @@ sc=500
 
 make all
 make createVenv
+mkdir data
+mdkri build
 
 make BenchLockOMP THR=$thr ACQ=$acq ITER=$iter SC=$sc
 make BenchCriticalOMP THR=$thr ACQ=$acq ITER=$iter SC=$sc

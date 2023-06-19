@@ -3,6 +3,7 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import subprocess
 
 def plotStuff(x, y, lock, df, color):
     stdd = "stdd"
@@ -13,13 +14,13 @@ def plotStuff(x, y, lock, df, color):
 def plotStuffSemilogy(x, y, lock, df, color):
     stdd = "stdd"
     mean = "mean"
-    plt.semilogy(df[x], df[mean+y], label = lock, color = color)
+    return plt.semilogy(df[x], df[mean+y], label = lock, color = color)
     # plt.errorbar(df[x], df[mean+y], df[stdd + y], linestyle='None', fmt='o', capsize=3, color = color)
 
 def plotStuffLoglog(x, y, lock, df, color):
     stdd = "stdd"
     mean = "mean"
-    plt.loglog(df[x], df[mean+y], label = lock, color = color)
+    return plt.loglog(df[x], df[mean+y], label = lock, color = color)
     # plt.errorbar(df[x], df[mean+y], df[stdd + y], linestyle='None', fmt='o', capsize=3, color = color)
 
 class benchData(ctypes.Structure):
@@ -96,4 +97,14 @@ def dataframeBuilderCycles(benchmarkList):
 
     df = pd.DataFrame(data, columns=columnNames)
     return df
+
+def get_available_threads():
+    try:
+        command = 'nproc --all'
+        output = subprocess.check_output(command, shell=True).decode('utf-8')
+        threads = int(output.strip())
+        return threads
+    except:
+        print("bro your environment is kinda trash")
+        return None
 
