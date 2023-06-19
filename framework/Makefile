@@ -103,11 +103,13 @@ make small-bench:
 	@myenv/bin/pip install numpy matplotlib pandas
 	@echo -e "Running benchmark python script...\n"
 	@. myenv/bin/activate
-	@srun benchmake.py 
+	@srun --cpu-freq=High --time=5:00 -p q_student -N 1 -c 64 python3 benchmake.py 
 
 make small-plot:
 	@echo -e "\nCreate python virtual environment...\n"
 	@python3 -m venv myenv
+
+	srun --cpu-freq=High --time=5:00 -p q_student -N 1 -c 64 python3 benchmake.py 
 	
 	@echo -e "Activate python virtual environment...\n"
 	@. myenv/bin/activate
@@ -116,4 +118,5 @@ make small-plot:
 	@myenv/bin/pip install --upgrade pip
 	@myenv/bin/pip install numpy matplotlib pandas
 	@echo -e "Running plotting python script...\n"
+	
 	@. myenv/bin/activate && python3 plotmake.py
